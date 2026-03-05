@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML & Data Science — Complete Graph</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060f;--surface:#0b0b18;--border:#161628;
+  --text:#ddddf5;--muted:#44446a;
+}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;min-height:100vh;overflow-x:hidden}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 15%,rgba(124,106,255,.05) 0%,transparent 65%),
+    radial-gradient(ellipse 50% 35% at 85% 85%,rgba(0,212,168,.04) 0%,transparent 65%),
+    linear-gradient(rgba(124,106,255,.02) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(90deg,rgba(124,106,255,.02) 1px,transparent 1px) 0 0/48px 48px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── HEADER ── */
+.container{position:relative;z-index:1;max-width:1800px;margin:0 auto;padding:20px}
+header{text-align:center;padding:36px 20px 24px;border-bottom:1px solid var(--border);margin-bottom:22px;position:relative}
+header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:180px;height:2px;background:linear-gradient(90deg,transparent,#7c6aff,transparent)}
+.title{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,46px);font-weight:800;
+  background:linear-gradient(135deg,#7c6aff 0%,#00d4a8 40%,#ff6b6b 70%,#ffd700 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
+.subtitle{color:var(--muted);font-size:10px;margin-top:8px;letter-spacing:3px;text-transform:uppercase}
+.hint{color:#3d3d60;font-size:11px;margin-top:5px}
+.hint b{color:#7c6aff}
+
+/* ── CONTROLS ── */
+.top-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.sw{flex:1;min-width:200px;position:relative}
+.sw::before{content:'⌕';position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:17px;pointer-events:none}
+#srch{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:9px 12px 9px 34px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;border-radius:6px;transition:border-color .2s}
+#srch:focus{border-color:#7c6aff}
+.btn{background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:9px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+  cursor:pointer;border-radius:6px;transition:all .2s;white-space:nowrap}
+.btn:hover{border-color:#7c6aff;color:#7c6aff}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;
+  padding:13px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.leg{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);
+  cursor:pointer;padding:3px 9px;border-radius:4px;transition:all .2s}
+.leg:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(540px,1fr));gap:16px}
+
+/* ── CARD ── */
+.graph-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .3s}
+.graph-card:hover{border-color:rgba(255,255,255,.1)}
+.card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;user-select:none;transition:background .15s}
+.card-head:hover{background:rgba(255,255,255,.03)}
+.card-glow{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+.card-lbl{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;flex:1}
+.card-cnt{font-size:10px;color:var(--muted);padding:3px 8px;border:1px solid var(--border);border-radius:99px}
+.card-arr{font-size:11px;color:var(--muted);transition:transform .3s;margin-left:4px}
+.graph-card.open .card-arr{transform:rotate(180deg)}
+.graph-body{display:none;border-top:1px solid var(--border);background:rgba(0,0,0,.25);position:relative}
+.graph-card.open .graph-body{display:block}
+.graph-body svg{display:block;width:100%}
+
+/* ── TOOLBAR ── */
+.gtb{position:absolute;top:10px;right:10px;z-index:10;display:flex;gap:5px}
+.gtb button{background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.55);
+  padding:5px 10px;font-size:9px;font-family:'IBM Plex Mono',monospace;cursor:pointer;border-radius:4px;
+  backdrop-filter:blur(8px);transition:all .15s}
+.gtb button:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+
+/* ── DEPTH INDICATOR ── */
+.depth-legend{position:absolute;bottom:10px;left:14px;display:flex;gap:10px;z-index:10}
+.di{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted)}
+.di-circle{border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.2)}
+
+/* ── D3 STYLES ── */
+.nd circle{cursor:pointer;transition:filter .2s}
+.nd circle:hover{filter:brightness(1.4) !important}
+.nd text{font-family:'IBM Plex Mono',monospace;pointer-events:none;dominant-baseline:middle}
+.lk{fill:none;opacity:.35;transition:opacity .2s}
+.lk:hover{opacity:.8}
+.nd.hl circle{stroke:#ffd700 !important;stroke-width:2.5 !important}
+.nd.dm{opacity:.12}
+.nd.hl{opacity:1 !important}
+
+/* ── TOOLTIP ── */
+#tip{position:fixed;background:rgba(8,8,18,.96);border:1px solid rgba(255,255,255,.15);
+  color:var(--text);padding:9px 13px;border-radius:7px;font-size:11px;
+  pointer-events:none;z-index:9999;max-width:240px;display:none;
+  box-shadow:0 6px 28px rgba(0,0,0,.6);backdrop-filter:blur(12px)}
+#tip .tn{font-weight:700;margin-bottom:3px;font-size:12px}
+#tip .td{color:var(--muted);font-size:10px}
+#tip .ti{color:#555577;font-size:9px;margin-top:4px;font-style:italic}
+
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="tip"><div class="tn"></div><div class="td"></div><div class="ti"></div></div>
+
+<div class="container">
+  <header>
+    <div class="title">ML & Data Science<br>Complete Knowledge Graph</div>
+    <div class="subtitle">Every Algorithm · Every Concept · Every Domain</div>
+    <div class="hint"><b>Click node</b> → expand/collapse &nbsp;·&nbsp; <b>Scroll</b> → zoom &nbsp;·&nbsp; <b>Drag</b> → pan</div>
+  </header>
+
+  <div class="top-bar">
+    <div class="sw"><input type="text" id="srch" placeholder="Search any concept, algorithm..." autocomplete="off"></div>
+    <button class="btn" onclick="openAll()">Open All</button>
+    <button class="btn" onclick="closeAll()">Close All</button>
+    <button class="btn" onclick="resetAll()">Reset All</button>
+  </div>
+
+  <div class="legend" id="leg"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+// ─── COMPLETE TAXONOMY ────────────────────────────────────────────────────────
+const DATA = [
+  {
+    id:"ds", label:"Data Science", color:"#38bdf8",
+    desc:"Core DS concepts: statistics, probability, analytics, visualization",
+    children:[
+      { name:"Statistics", children:[
+        { name:"Descriptive Stats", children:[
+          {name:"Mean / Median / Mode",desc:"Central tendency measures"},
+          {name:"Variance / Std Dev",desc:"Spread measures"},
+          {name:"Skewness / Kurtosis",desc:"Shape of distribution"},
+          {name:"IQR / Quantiles",desc:"Rank-based spread"},
+          {name:"Covariance / Correlation",desc:"Bivariate relationships"},
+          {name:"Five-Number Summary",desc:"Min, Q1, Med, Q3, Max"}
+        ]},
+        { name:"Inferential Stats", children:[
+          {name:"Hypothesis Testing",desc:"H₀ vs H₁ framework"},
+          {name:"p-value / α level",desc:"Significance threshold"},
+          {name:"Type I & Type II Error",desc:"False positive/negative"},
+          {name:"Confidence Intervals",desc:"Range of plausible values"},
+          {name:"Statistical Power",desc:"Probability of detecting effect"},
+          {name:"Effect Size (Cohen's d)",desc:"Magnitude of difference"},
+          {name:"Multiple Testing (Bonferroni)",desc:"Correction for inflation"}
+        ]},
+        { name:"Parametric Tests", children:[
+          {name:"t-test (1-sample / 2-sample)",desc:"Compare means"},
+          {name:"Paired t-test",desc:"Before-after comparison"},
+          {name:"ANOVA (1-way / 2-way)",desc:"Compare 3+ group means"},
+          {name:"MANOVA",desc:"Multiple dependent variables"},
+          {name:"F-test",desc:"Variance ratio test"},
+          {name:"Pearson Correlation",desc:"Linear association"},
+          {name:"z-test",desc:"Known variance test"}
+        ]},
+        { name:"Non-Parametric Tests", children:[
+          {name:"Mann-Whitney U",desc:"Non-parametric 2-group"},
+          {name:"Wilcoxon Signed-Rank",desc:"Paired non-parametric"},
+          {name:"Kruskal-Wallis",desc:"Non-parametric ANOVA"},
+          {name:"Chi-Square Test",desc:"Categorical association"},
+          {name:"Fisher's Exact Test",desc:"Small sample 2×2"},
+          {name:"Spearman Correlation",desc:"Rank-based correlation"},
+          {name:"Kolmogorov-Smirnov",desc:"Distribution comparison"}
+        ]},
+        { name:"Experimental Design", children:[
+          {name:"A/B Testing",desc:"Controlled online experiment"},
+          {name:"Randomized Control Trial",desc:"Gold standard experiment"},
+          {name:"Factorial Design",desc:"Multiple factors simultaneously"},
+          {name:"Block Design",desc:"Control nuisance variables"},
+          {name:"Latin Square",desc:"Two nuisance variables"},
+          {name:"Multi-Armed Bandit Tests",desc:"Adaptive experimentation"},
+          {name:"Power Analysis",desc:"Sample size calculation"}
+        ]}
+      ]},
+      { name:"Probability", children:[
+        { name:"Fundamentals", children:[
+          {name:"Sample Space / Events",desc:"Ω, σ-algebra"},
+          {name:"Axioms of Probability",desc:"Kolmogorov axioms"},
+          {name:"Conditional Probability",desc:"P(A|B) = P(A∩B)/P(B)"},
+          {name:"Bayes' Theorem",desc:"Posterior from prior + likelihood"},
+          {name:"Law of Total Probability",desc:"Marginalization"},
+          {name:"Independence",desc:"P(A∩B) = P(A)·P(B)"}
+        ]},
+        { name:"Distributions", children:[
+          {name:"Bernoulli / Binomial",desc:"Binary outcome trials"},
+          {name:"Poisson",desc:"Count in fixed interval"},
+          {name:"Geometric / Negative Binomial",desc:"Trials until success"},
+          {name:"Normal / Gaussian",desc:"Bell curve, CLT backbone"},
+          {name:"Student's t",desc:"Small sample, unknown σ"},
+          {name:"Chi-Squared (χ²)",desc:"Sum of squared normals"},
+          {name:"F-Distribution",desc:"Ratio of chi-squared"},
+          {name:"Exponential",desc:"Time between Poisson events"},
+          {name:"Beta",desc:"Probability of probability"},
+          {name:"Gamma / Dirichlet",desc:"Conjugate priors"},
+          {name:"Uniform",desc:"Equal probability density"},
+          {name:"Multivariate Normal",desc:"Covariance matrix extension"}
+        ]},
+        { name:"Stochastic Processes", children:[
+          {name:"Markov Chains",desc:"Memoryless transitions"},
+          {name:"Poisson Process",desc:"Continuous-time counting"},
+          {name:"Random Walk",desc:"Successive random steps"},
+          {name:"Brownian Motion",desc:"Continuous random path"},
+          {name:"Martingale",desc:"Fair game condition"},
+          {name:"Renewal Theory",desc:"Inter-arrival times"}
+        ]},
+        { name:"Information Theory", children:[
+          {name:"Shannon Entropy",desc:"H(X) = -Σ p log p"},
+          {name:"KL Divergence",desc:"Distribution difference"},
+          {name:"Mutual Information",desc:"Shared information"},
+          {name:"Cross-Entropy",desc:"Classification loss basis"},
+          {name:"Jensen-Shannon Div.",desc:"Symmetric KL"},
+          {name:"Channel Capacity",desc:"Maximum transmission rate"},
+          {name:"AIC / BIC",desc:"Information criteria for models"}
+        ]}
+      ]},
+      { name:"Data Analysis", children:[
+        { name:"EDA (Exploratory)", children:[
+          {name:"Univariate Analysis",desc:"Single variable summaries"},
+          {name:"Bivariate Analysis",desc:"Pairwise relationships"},
+          {name:"Multivariate Analysis",desc:"Joint distributions"},
+          {name:"Missing Data Analysis",desc:"MCAR/MAR/MNAR patterns"},
+          {name:"Outlier Detection (EDA)",desc:"Tukey fences, scatter plots"},
+          {name:"Distribution Fitting",desc:"Match data to distribution"},
+          {name:"Correlation Matrix",desc:"Pairwise feature correlations"}
+        ]},
+        { name:"Data Wrangling", children:[
+          {name:"Pandas / Polars",desc:"Dataframe manipulation"},
+          {name:"SQL Querying",desc:"Relational data queries"},
+          {name:"Data Reshaping (melt/pivot)",desc:"Long ↔ wide format"},
+          {name:"Merging / Joining",desc:"Inner/outer/left/right"},
+          {name:"String Cleaning (regex)",desc:"Text normalization"},
+          {name:"Datetime Handling",desc:"Parse, resample, shift"},
+          {name:"Data Validation (Great Expectations)",desc:"Schema + value checks"}
+        ]},
+        { name:"Data Visualization", children:[
+          {name:"Histograms / KDE Plots",desc:"Distribution shapes"},
+          {name:"Box / Violin Plots",desc:"Summary + spread"},
+          {name:"Scatter / Bubble Plots",desc:"Bivariate relationships"},
+          {name:"Line / Area Charts",desc:"Trends over time"},
+          {name:"Bar / Lollipop Charts",desc:"Category comparison"},
+          {name:"Heatmaps / Clustermap",desc:"Matrix visualization"},
+          {name:"Pair Plot / Facet Grid",desc:"Multi-feature overview"},
+          {name:"t-SNE / UMAP Plot",desc:"High-dim embedding viz"},
+          {name:"Sankey / Alluvial",desc:"Flow visualization"},
+          {name:"Matplotlib / Seaborn",desc:"Python static charts"},
+          {name:"Plotly / Altair",desc:"Interactive charts"},
+          {name:"Tableau / Power BI",desc:"BI dashboards"},
+          {name:"D3.js",desc:"Custom web visualizations"}
+        ]}
+      ]},
+      { name:"Linear Algebra", children:[
+        { name:"Core Concepts", children:[
+          {name:"Vectors & Vector Spaces",desc:"Span, basis, dimension"},
+          {name:"Matrix Operations",desc:"Add, multiply, transpose"},
+          {name:"Linear Transformations",desc:"Rotations, projections"},
+          {name:"Dot & Cross Products",desc:"Inner / outer product"},
+          {name:"Norms (L1, L2, Lp)",desc:"Vector magnitude measures"},
+          {name:"Rank & Nullspace",desc:"Column / row / null space"}
+        ]},
+        { name:"Decompositions", children:[
+          {name:"LU Decomposition",desc:"Forward-backward solve"},
+          {name:"QR Decomposition",desc:"Orthonormal basis"},
+          {name:"Eigendecomposition",desc:"Av = λv"},
+          {name:"SVD (Singular Value Decomp.)",desc:"A = UΣVᵀ"},
+          {name:"Cholesky Decomposition",desc:"Positive definite matrices"},
+          {name:"Spectral Theorem",desc:"Symmetric eigen decomp."}
+        ]},
+        { name:"Applied Topics", children:[
+          {name:"PCA via SVD",desc:"Dimensionality reduction"},
+          {name:"Least Squares via QR",desc:"Regression solution"},
+          {name:"PageRank (Markov Matrix)",desc:"Link analysis"},
+          {name:"Graph Laplacian",desc:"Spectral graph theory"},
+          {name:"Tensor Operations",desc:"Multi-dimensional arrays"},
+          {name:"Kronecker Products",desc:"Block matrix structure"}
+        ]}
+      ]},
+      { name:"Calculus & Optimization", children:[
+        { name:"Calculus Foundations", children:[
+          {name:"Derivatives / Partial Derivatives",desc:"Rate of change"},
+          {name:"Chain Rule",desc:"Composite function grad"},
+          {name:"Gradient / Jacobian / Hessian",desc:"1st + 2nd order info"},
+          {name:"Taylor Expansion",desc:"Local function approximation"},
+          {name:"Integrals / Probability Density",desc:"Area under curve"},
+          {name:"Multivariate Chain Rule",desc:"Backprop foundation"}
+        ]},
+        { name:"Optimization Methods", children:[
+          {name:"Gradient Descent",desc:"First-order iterative"},
+          {name:"Newton's Method",desc:"Second-order (Hessian)"},
+          {name:"Quasi-Newton (BFGS, L-BFGS)",desc:"Approximate Hessian"},
+          {name:"Convex Optimization",desc:"Global min guarantee"},
+          {name:"Lagrange Multipliers",desc:"Constrained optimization"},
+          {name:"KKT Conditions",desc:"Inequality constrained opt."},
+          {name:"Stochastic Optimization",desc:"SGD + variants"},
+          {name:"Evolutionary Algorithms",desc:"GA, CMA-ES, PSO"},
+          {name:"Simulated Annealing",desc:"Probabilistic hill climbing"}
+        ]}
+      ]},
+      { name:"Data Engineering", children:[
+        {name:"SQL (Joins, Window Functions)",desc:"Relational querying"},
+        {name:"NoSQL (MongoDB, Redis)",desc:"Document/KV/graph stores"},
+        {name:"Data Warehouses (Snowflake, BigQuery)",desc:"OLAP analytics"},
+        {name:"Data Lakes (S3, Delta Lake)",desc:"Raw data storage"},
+        {name:"ETL / ELT Pipelines",desc:"Extract-transform-load"},
+        {name:"Apache Spark / Dask",desc:"Distributed dataframes"},
+        {name:"Kafka (Streaming)",desc:"Real-time data pipelines"},
+        {name:"Airflow / Prefect (Orchestration)",desc:"DAG-based scheduling"},
+        {name:"dbt (Data Build Tool)",desc:"SQL transformation layer"},
+        {name:"Parquet / Arrow formats",desc:"Columnar storage"},
+        {name:"Feature Stores (Feast, Tecton)",desc:"Centralized feature serving"}
+      ]},
+      { name:"Business & Causal", children:[
+        {name:"Business Metrics (KPIs, OKRs)",desc:"Goal-oriented measurement"},
+        {name:"Cohort Analysis",desc:"Grouped longitudinal behavior"},
+        {name:"Funnel Analysis",desc:"Conversion rate tracking"},
+        {name:"Churn Analysis",desc:"Retention modeling"},
+        {name:"Causal Inference (DoWhy)",desc:"Counterfactual reasoning"},
+        {name:"Difference-in-Differences",desc:"Policy impact estimation"},
+        {name:"Propensity Score Matching",desc:"Observational study debiasing"},
+        {name:"Regression Discontinuity",desc:"Sharp threshold designs"},
+        {name:"Instrumental Variables",desc:"Endogeneity correction"},
+        {name:"Survival Analysis (Cox PH)",desc:"Time-to-event modeling"}
+      ]}
+    ]
+  },
+  {
+    id:"sup", label:"Supervised Learning", color:"#7c6aff",
+    desc:"Learning from labeled input-output pairs",
+    children:[
+      { name:"Regression", children:[
+        { name:"Linear Methods", children:[
+          {name:"OLS",desc:"Ordinary Least Squares"},{name:"Ridge (L2)"},{name:"Lasso (L1)"},
+          {name:"ElasticNet"},{name:"Polynomial"},{name:"Bayesian Linear"},
+          {name:"Robust/Huber"},{name:"Quantile"},{name:"LARS"}
+        ]},
+        { name:"Tree Regression", children:[
+          {name:"Decision Tree CART"},{name:"Random Forest"},{name:"Extra Trees"},
+          {name:"XGBoost"},{name:"LightGBM"},{name:"CatBoost"},{name:"GBT"}
+        ]},
+        { name:"Kernel & GP", children:[
+          {name:"SVR"},{name:"KNN Regression"},{name:"Gaussian Process"},
+          {name:"Kernel Ridge"},{name:"Nadaraya-Watson"}
+        ]},
+        { name:"Statistical", children:[
+          {name:"GLM"},{name:"Isotonic"},{name:"Spline/LOESS"},{name:"Theil-Sen"}
+        ]}
+      ]},
+      { name:"Classification", children:[
+        { name:"Linear", children:[
+          {name:"Logistic Regression"},{name:"LDA"},{name:"QDA"},
+          {name:"Perceptron"},{name:"SGD Classifier"}
+        ]},
+        { name:"Naive Bayes", children:[
+          {name:"Gaussian NB"},{name:"Multinomial NB"},{name:"Bernoulli NB"}
+        ]},
+        { name:"SVM", children:[
+          {name:"Linear SVM"},{name:"RBF SVM"},{name:"Poly SVM"},{name:"One-Class SVM"}
+        ]},
+        { name:"Trees", children:[
+          {name:"ID3"},{name:"C4.5"},{name:"CART"},{name:"Random Forest"},
+          {name:"Extra Trees"},{name:"AdaBoost"},{name:"XGBoost"},
+          {name:"LightGBM"},{name:"CatBoost"}
+        ]},
+        { name:"Instance-Based", children:[
+          {name:"KNN"},{name:"Weighted KNN"},{name:"LVQ"}
+        ]},
+        { name:"Multi-label", children:[
+          {name:"One-vs-Rest"},{name:"One-vs-One"},
+          {name:"Label Powerset"},{name:"Classifier Chains"}
+        ]}
+      ]},
+      { name:"Sequence & TS", children:[
+        {name:"HMM"},{name:"CRF"},{name:"Structured SVM"},
+        {name:"ARIMA/SARIMA"},{name:"Prophet"},{name:"N-BEATS"},
+        {name:"Temporal Fusion Transformer"},{name:"DeepAR"},{name:"Mamba SSM"}
+      ]}
+    ]
+  },
+  {
+    id:"unsup", label:"Unsupervised Learning", color:"#00d4a8",
+    desc:"Structure in unlabeled data",
+    children:[
+      { name:"Clustering", children:[
+        { name:"Centroid", children:[
+          {name:"K-Means"},{name:"K-Means++"},{name:"K-Medoids"},
+          {name:"Fuzzy C-Means"},{name:"Mini-Batch K-Means"}
+        ]},
+        { name:"Hierarchical", children:[
+          {name:"Agglomerative Single/Complete"},{name:"Ward"},
+          {name:"BIRCH"},{name:"DIANA"}
+        ]},
+        { name:"Density", children:[
+          {name:"DBSCAN"},{name:"OPTICS"},{name:"HDBSCAN"},{name:"Mean Shift"}
+        ]},
+        { name:"Model-Based", children:[
+          {name:"GMM"},{name:"Bayesian GMM"},{name:"LDA Topics"}
+        ]},
+        { name:"Spectral", children:[
+          {name:"Spectral Clustering"},{name:"Affinity Propagation"},{name:"MCL"}
+        ]}
+      ]},
+      { name:"Dim. Reduction", children:[
+        { name:"Linear", children:[
+          {name:"PCA"},{name:"Kernel PCA"},{name:"ICA"},{name:"NMF"},
+          {name:"SVD/LSA"},{name:"Factor Analysis"},{name:"CCA"}
+        ]},
+        { name:"Manifold", children:[
+          {name:"t-SNE"},{name:"UMAP"},{name:"Isomap"},{name:"LLE"},
+          {name:"Diffusion Maps"},{name:"PHATE"},{name:"PaCMAP"}
+        ]},
+        { name:"Autoencoder", children:[
+          {name:"Vanilla AE"},{name:"Sparse AE"},{name:"Denoising AE"},
+          {name:"VAE"},{name:"β-VAE"},{name:"VQGAN"}
+        ]},
+        { name:"Feature Selection", children:[
+          {name:"Variance Threshold"},{name:"Mutual Information"},
+          {name:"RFE"},{name:"Boruta"},{name:"SHAP-based"}
+        ]}
+      ]},
+      { name:"Anomaly Detection", children:[
+        {name:"Z-Score / IQR"},{name:"Isolation Forest"},{name:"LOF"},
+        {name:"One-Class SVM"},{name:"Autoencoder AD"},{name:"Deep SVDD"},
+        {name:"ANOGAN"},{name:"Matrix Profile"}
+      ]},
+      { name:"Association Rules", children:[
+        {name:"Apriori"},{name:"FP-Growth"},{name:"Eclat"},{name:"PrefixSpan"}
+      ]}
+    ]
+  },
+  {
+    id:"dl", label:"Deep Learning", color:"#ffb347",
+    desc:"Hierarchical representation learning",
+    children:[
+      { name:"CNN", children:[
+        { name:"Classic", children:[
+          {name:"LeNet-5"},{name:"AlexNet"},{name:"VGGNet"},{name:"Inception v1-v4"}
+        ]},
+        { name:"Modern", children:[
+          {name:"ResNet (18-152)"},{name:"DenseNet"},{name:"EfficientNet B0-B7"},
+          {name:"MobileNet v1-v3"},{name:"ConvNeXt"},{name:"RegNet"}
+        ]},
+        { name:"Attention CNN", children:[
+          {name:"SENet"},{name:"CBAM"},{name:"EfficientDet"}
+        ]}
+      ]},
+      { name:"RNN Family", children:[
+        {name:"Vanilla RNN"},{name:"LSTM"},{name:"BiLSTM"},
+        {name:"GRU"},{name:"Echo State Net"},{name:"Clockwork RNN"}
+      ]},
+      { name:"Transformers", children:[
+        { name:"Encoders", children:[
+          {name:"BERT"},{name:"RoBERTa"},{name:"DeBERTa"},
+          {name:"ALBERT"},{name:"ELECTRA"},{name:"XLNet"}
+        ]},
+        { name:"LLMs (Decoder)", children:[
+          {name:"GPT-1/2/3/4"},{name:"LLaMA 1/2/3"},{name:"Mistral/Mixtral"},
+          {name:"Falcon"},{name:"Gemma"},{name:"PaLM / PaLM-2"}
+        ]},
+        { name:"Encoder-Decoder", children:[
+          {name:"T5 / Flan-T5"},{name:"BART"},{name:"mT5"}
+        ]},
+        { name:"Vision", children:[
+          {name:"ViT"},{name:"DeiT"},{name:"Swin Transformer"},
+          {name:"CLIP"},{name:"DINO / DINOv2"}
+        ]}
+      ]},
+      { name:"SSMs", children:[
+        {name:"S4"},{name:"Mamba"},{name:"Mamba-2"},{name:"RWKV"},{name:"RetNet"}
+      ]},
+      { name:"Generative", children:[
+        { name:"GANs", children:[
+          {name:"Vanilla GAN"},{name:"DCGAN"},{name:"WGAN/WGAN-GP"},
+          {name:"StyleGAN 1/2/3"},{name:"CycleGAN"},{name:"BigGAN"}
+        ]},
+        { name:"VAEs", children:[
+          {name:"Vanilla VAE"},{name:"β-VAE"},{name:"CVAE"},
+          {name:"VQ-VAE-2"},{name:"VQGAN"}
+        ]},
+        { name:"Diffusion", children:[
+          {name:"DDPM"},{name:"DDIM"},{name:"LDM/Stable Diffusion"},
+          {name:"DALL-E 2/3"},{name:"Imagen"},{name:"ControlNet"},
+          {name:"Flux (Flow Matching)"}
+        ]},
+        { name:"Flows", children:[
+          {name:"RealNVP"},{name:"Glow"},{name:"MAF"},
+          {name:"Neural Spline Flow"},{name:"NICE"}
+        ]},
+        { name:"EBMs", children:[
+          {name:"RBM"},{name:"DBN"},{name:"DBM"},{name:"JEM"}
+        ]}
+      ]},
+      { name:"GNNs", children:[
+        {name:"GCN"},{name:"GraphSAGE"},{name:"GAT"},{name:"GIN"},
+        {name:"MPNN"},{name:"DiffPool"},{name:"RGCN"},{name:"HGT"}
+      ]},
+      { name:"Training", children:[
+        { name:"Optimizers", children:[
+          {name:"SGD+Momentum"},{name:"Adam"},{name:"AdamW"},
+          {name:"RMSprop"},{name:"LAMB"},{name:"Lion"},{name:"Sophia"}
+        ]},
+        { name:"Regularization", children:[
+          {name:"Dropout"},{name:"DropBlock"},{name:"BatchNorm"},
+          {name:"LayerNorm"},{name:"Label Smoothing"},{name:"Mixup/CutMix"}
+        ]},
+        { name:"LR Schedules", children:[
+          {name:"Cosine Annealing"},{name:"Warmup+Cosine"},{name:"OneCycleLR"}
+        ]}
+      ]},
+      { name:"Special Arch.", children:[
+        {name:"MoE (Mixtral, Switch Transformer)"},{name:"Flash Attention"},
+        {name:"NTM / DNC"},{name:"NAS (DARTS/ENAS)"},
+        {name:"Spiking NNs (LIF)"},{name:"Capsule Networks"},
+        {name:"Hypernetworks"}
+      ]}
+    ]
+  },
+  {
+    id:"rl", label:"Reinforcement Learning", color:"#ff6b6b",
+    desc:"Learning via environment interaction & rewards",
+    children:[
+      { name:"Model-Free", children:[
+        { name:"Value-Based", children:[
+          {name:"Q-Learning"},{name:"SARSA"},{name:"DQN"},{name:"Double DQN"},
+          {name:"Dueling DQN"},{name:"Prioritized ER"},{name:"C51"},
+          {name:"QR-DQN"},{name:"Rainbow DQN"}
+        ]},
+        { name:"Policy Gradient", children:[
+          {name:"REINFORCE"},{name:"A2C / A3C"},{name:"PPO"},
+          {name:"TRPO"},{name:"ACER"},{name:"ACKTR"}
+        ]},
+        { name:"Actor-Critic", children:[
+          {name:"DDPG"},{name:"TD3"},{name:"SAC"},{name:"MPO"}
+        ]}
+      ]},
+      { name:"Model-Based", children:[
+        {name:"Dyna / Dyna-Q"},{name:"Dreamer / V2 / V3"},{name:"MBPO"},
+        {name:"AlphaGo Zero"},{name:"AlphaZero"},{name:"MuZero"},{name:"EfficientZero"}
+      ]},
+      { name:"Advanced", children:[
+        { name:"MARL", children:[
+          {name:"IQL"},{name:"QMIX"},{name:"MADDPG"},{name:"MAPPO"},{name:"COMA"}
+        ]},
+        { name:"Hierarchical", children:[
+          {name:"Options Framework"},{name:"FeUdal Networks"},{name:"HIRO"}
+        ]},
+        { name:"Exploration", children:[
+          {name:"ε-Greedy"},{name:"UCB"},{name:"ICM (Curiosity)"},{name:"RND"},{name:"NGU"}
+        ]},
+        { name:"Offline RL", children:[
+          {name:"BCQ"},{name:"CQL"},{name:"IQL"},{name:"Decision Transformer"}
+        ]},
+        { name:"Imitation / IRL", children:[
+          {name:"Behavioral Cloning"},{name:"DAgger"},{name:"GAIL"},{name:"MaxEnt IRL"}
+        ]},
+        { name:"Meta-RL", children:[
+          {name:"MAML"},{name:"RL²"},{name:"SNAIL"},{name:"PEARL"}
+        ]},
+        { name:"Safe RL", children:[
+          {name:"CPO"},{name:"PPO-Lagrangian"},{name:"Safety Layer"},{name:"Lyapunov RL"}
+        ]}
+      ]},
+      { name:"Bandits", children:[
+        {name:"MAB"},{name:"UCB1"},{name:"Thompson Sampling"},
+        {name:"LinUCB"},{name:"EXP3"},{name:"Bayesian Optimization"}
+      ]}
+    ]
+  },
+  {
+    id:"ssl", label:"Semi / Self-Supervised", color:"#64c8ff",
+    desc:"Leverage unlabeled data",
+    children:[
+      { name:"Semi-Supervised", children:[
+        {name:"Self-Training"},{name:"Label Propagation"},{name:"Co-Training"},
+        {name:"Mean Teacher"},{name:"MixMatch"},{name:"FixMatch"},
+        {name:"FlexMatch"},{name:"UDA"},{name:"TSVM"}
+      ]},
+      { name:"Contrastive SSL", children:[
+        {name:"SimCLR v1/v2"},{name:"MoCo v1/v2/v3"},{name:"BYOL"},
+        {name:"SimSiam"},{name:"VICReg"},{name:"Barlow Twins"},
+        {name:"SwAV"},{name:"PCL"}
+      ]},
+      { name:"Masked Predictive", children:[
+        {name:"MAE"},{name:"BEiT"},{name:"DINO / DINOv2"},
+        {name:"iBOT"},{name:"VideoMAE"},{name:"data2vec"}
+      ]},
+      { name:"Pretext Tasks", children:[
+        {name:"Rotation Prediction"},{name:"Jigsaw"},{name:"Colorization"},
+        {name:"MLM (BERT)"},{name:"CLM (GPT)"},{name:"CPC"},{name:"SimCSE"}
+      ]}
+    ]
+  },
+  {
+    id:"transfer", label:"Transfer / Meta / Continual", color:"#ff7eb3",
+    desc:"Reuse knowledge across tasks & time",
+    children:[
+      { name:"Transfer Learning", children:[
+        {name:"Feature Extraction"},{name:"Full Fine-Tuning"},
+        {name:"Adapters"},{name:"Prompt Tuning"},{name:"Prefix Tuning"},
+        {name:"LoRA"},{name:"QLoRA"},{name:"DoRA"},{name:"BitFit"},
+        {name:"RLHF"},{name:"DPO"},{name:"ORPO"}
+      ]},
+      { name:"Domain Adaptation", children:[
+        {name:"DANN"},{name:"CORAL"},{name:"MMD"},
+        {name:"ADDA"},{name:"SHOT (Source-Free)"},{name:"TTT"}
+      ]},
+      { name:"Meta-Learning", children:[
+        {name:"MAML"},{name:"Reptile"},{name:"Meta-SGD"},
+        {name:"Prototypical Nets"},{name:"Matching Nets"},
+        {name:"Relation Nets"},{name:"Siamese Nets"}
+      ]},
+      { name:"Few/Zero-Shot", children:[
+        {name:"Zero-Shot (CLIP)"},{name:"ICL (LLM)"},{name:"GZSL"},
+        {name:"Attribute ZSL"},{name:"FSOD"}
+      ]},
+      { name:"Continual Learning", children:[
+        {name:"EWC"},{name:"Progressive NN"},{name:"GEM / A-GEM"},
+        {name:"Experience Replay"},{name:"DER++"},{name:"iCaRL"},
+        {name:"LwF"},{name:"L2P"},{name:"DualPrompt"}
+      ]},
+      { name:"Multi-Task", children:[
+        {name:"Hard Param Sharing"},{name:"Soft Param Sharing"},
+        {name:"Cross-Stitch"},{name:"PCGrad"},{name:"GradNorm"},{name:"MGDA"}
+      ]}
+    ]
+  },
+  {
+    id:"ens", label:"Ensemble Methods", color:"#a8ff78",
+    desc:"Combining models for better performance",
+    children:[
+      { name:"Bagging", children:[
+        {name:"Bootstrap Aggregating"},{name:"Random Forest"},
+        {name:"Extra Trees"},{name:"Random Patches"}
+      ]},
+      { name:"Boosting", children:[
+        {name:"AdaBoost"},{name:"GBM"},{name:"Stochastic GBM"},
+        {name:"XGBoost"},{name:"LightGBM"},{name:"CatBoost"},
+        {name:"NGBoost"},{name:"HistGBT"}
+      ]},
+      { name:"Stacking", children:[
+        {name:"Stacked Generalization"},{name:"Blending"},
+        {name:"Multi-level Stacking"},{name:"DES"}
+      ]},
+      { name:"Voting / Avg.", children:[
+        {name:"Hard Voting"},{name:"Soft Voting"},
+        {name:"Snapshot Ensembles"},{name:"SWA"},{name:"SWAG"}
+      ]}
+    ]
+  },
+  {
+    id:"prob", label:"Probabilistic & Bayesian", color:"#ff9500",
+    desc:"Reasoning under uncertainty",
+    children:[
+      { name:"Bayesian Inference", children:[
+        {name:"Bayesian Linear Reg."},{name:"Gaussian Process"},
+        {name:"Dirichlet Process"},{name:"BNNs"},
+        {name:"Variational Inference"},{name:"Laplace Approx."},{name:"EP"}
+      ]},
+      { name:"Markov Models", children:[
+        {name:"HMM"},{name:"MDP"},{name:"POMDP"},
+        {name:"MRF"},{name:"CRF"},{name:"DBN"}
+      ]},
+      { name:"Graphical Models", children:[
+        {name:"Bayesian Network"},{name:"Factor Graph"},
+        {name:"Belief Propagation"},{name:"Junction Tree"}
+      ]},
+      { name:"MCMC", children:[
+        {name:"Metropolis-Hastings"},{name:"Gibbs Sampling"},
+        {name:"HMC"},{name:"NUTS"},{name:"SGLD"},{name:"SMC"}
+      ]},
+      { name:"Calibration", children:[
+        {name:"Platt Scaling"},{name:"Temperature Scaling"},
+        {name:"Deep Ensembles"},{name:"MC Dropout"},{name:"Conformal Prediction"}
+      ]}
+    ]
+  },
+  {
+    id:"found", label:"ML Pipeline & MLOps", color:"#ffd700",
+    desc:"Engineering, evaluation, deployment",
+    children:[
+      { name:"Preprocessing", children:[
+        {name:"Normalization/Scaling"},{name:"Encoding (OHE, Target)"},
+        {name:"Imputation (KNN, MICE)"},{name:"SMOTE / ADASYN"},
+        {name:"Data Augmentation"},{name:"Box-Cox Transform"}
+      ]},
+      { name:"Feature Engineering", children:[
+        {name:"Polynomial/Crossing"},{name:"TF-IDF"},
+        {name:"Word2Vec/GloVe/FastText"},{name:"SBERT Embeddings"},
+        {name:"Rolling Window"},{name:"Entity Embeddings"}
+      ]},
+      { name:"Evaluation", children:[
+        {name:"Classification (F1, AUC, MCC)"},{name:"Regression (RMSE, R²)"},
+        {name:"NLP (BLEU, BERTScore)"},{name:"Clustering (Silhouette, ARI)"},
+        {name:"Ranking (NDCG, MAP)"}
+      ]},
+      { name:"Model Selection", children:[
+        {name:"K-Fold / Stratified CV"},{name:"Time-Series Split"},
+        {name:"Nested CV"},{name:"Bias-Variance Analysis"}
+      ]},
+      { name:"HPO & AutoML", children:[
+        {name:"Grid / Random Search"},{name:"Bayesian Opt. (Optuna)"},
+        {name:"Hyperband / BOHB"},{name:"PBT"},
+        {name:"Auto-sklearn / H2O / FLAML"}
+      ]},
+      { name:"XAI", children:[
+        {name:"SHAP"},{name:"LIME"},{name:"Integrated Gradients"},
+        {name:"Grad-CAM"},{name:"Permutation Importance"},
+        {name:"PDP / ICE"},{name:"Counterfactuals"}
+      ]},
+      { name:"MLOps", children:[
+        {name:"MLflow / DVC"},{name:"Feature Stores (Feast)"},
+        {name:"Triton / TorchServe"},{name:"ONNX / TensorRT"},
+        {name:"Quantization (PTQ/QAT)"},{name:"Pruning"},
+        {name:"Knowledge Distillation"},{name:"Model Monitoring"},
+        {name:"Drift Detection"},{name:"Kubeflow / CI-CD for ML"}
+      ]},
+      { name:"Fairness & Safety", children:[
+        {name:"Demographic Parity"},{name:"Equalized Odds"},
+        {name:"Adversarial Robustness"},{name:"Differential Privacy"},
+        {name:"Federated Learning"},{name:"Conformal Prediction"}
+      ]}
+    ]
+  },
+  {
+    id:"applied", label:"Applied ML Domains", color:"#d0a0ff",
+    desc:"ML across major application domains",
+    children:[
+      { name:"Computer Vision", children:[
+        {name:"Image Classification"},{name:"Object Detection (YOLO, DETR)"},
+        {name:"Semantic Segmentation (UNet, DeepLab)"},{name:"Instance Seg."},
+        {name:"Pose Estimation"},{name:"Optical Flow (RAFT)"},
+        {name:"Video Understanding"},{name:"NeRF / 3DGS"},
+        {name:"Face Recognition (ArcFace)"},{name:"Medical Imaging"},
+        {name:"OCR (TrOCR)"},{name:"Depth Estimation"}
+      ]},
+      { name:"NLP", children:[
+        {name:"Tokenization (BPE/SPM)"},{name:"Text Classification"},
+        {name:"NER / POS Tagging"},{name:"Machine Translation"},
+        {name:"QA / RAG"},{name:"Summarization"},
+        {name:"NLI / STS"},{name:"Code Generation"},
+        {name:"Chain-of-Thought"},{name:"Dialogue Systems"}
+      ]},
+      { name:"Speech & Audio", children:[
+        {name:"ASR (Whisper, wav2vec2)"},{name:"TTS (FastSpeech, Tacotron)"},
+        {name:"Speaker Diarization"},{name:"Music Generation"},
+        {name:"Source Separation (Demucs)"},{name:"Speech Enhancement"}
+      ]},
+      { name:"Recommenders", children:[
+        {name:"Collaborative Filtering"},{name:"Matrix Factorization"},
+        {name:"Two-Tower Model"},{name:"SASRec / BERT4Rec"},
+        {name:"LightGCN"},{name:"VAE-CF"},{name:"Diffusion Rec."}
+      ]},
+      { name:"Graph ML", children:[
+        {name:"Node Classification"},{name:"Link Prediction"},
+        {name:"KG Embeddings (TransE)"},{name:"Temporal GNN"},
+        {name:"AlphaFold 2/3"},{name:"Drug-Target Interaction"}
+      ]},
+      { name:"Multimodal", children:[
+        {name:"CLIP / ALIGN"},{name:"VQA"},{name:"BLIP-2 Captioning"},
+        {name:"Text-to-Image (SD, DALL-E)"},{name:"GPT-4V / Gemini"},
+        {name:"Text-to-Video (Sora)"},{name:"Embodied AI"}
+      ]},
+      { name:"Scientific ML", children:[
+        {name:"PINN"},{name:"Neural Operators (FNO)"},
+        {name:"Equivariant Nets (SE(3))"},{name:"Neural ODE/SDE"},
+        {name:"GraphCast / Pangu (Weather)"},{name:"GFlowNet (Materials)"}
+      ]},
+      { name:"Tabular", children:[
+        {name:"XGBoost / LightGBM / CatBoost"},{name:"TabNet"},
+        {name:"FT-Transformer"},{name:"SAINT"},{name:"Wide & Deep"}
+      ]}
+    ]
+  }
+];
+
+// ─── GRAPH ENGINE ─────────────────────────────────────────────────────────────
+const H = 500;
+let uid = 0;
+
+// Node radii by depth
+const R = [12, 8.5, 6, 4.5, 3.5];
+
+function getR(depth){ return R[Math.min(depth, R.length-1)]; }
+
+function countAll(node){
+  const ch = node.children || node._children || [];
+  return ch.length + ch.reduce((s,c)=>s+countAll(c),0);
+}
+
+function buildGraph(sec, idx){
+  const wrap = document.getElementById('gbody-'+idx);
+  if(!wrap || wrap.dataset.built==='1') return;
+  wrap.dataset.built='1';
+
+  const color = sec.color;
+  const W = wrap.clientWidth || 560;
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+
+  // glow defs
+  const defs = svg.append('defs');
+  ['root','branch'].forEach(k=>{
+    const f = defs.append('filter').attr('id',`gf-${k}-${idx}`);
+    f.append('feGaussianBlur').attr('stdDeviation', k==='root'?4:2.5).attr('result','bl');
+    const m = f.append('feMerge');
+    m.append('feMergeNode').attr('in','bl');
+    m.append('feMergeNode').attr('in','SourceGraphic');
+  });
+
+  // gradient for links
+  const lg = defs.append('linearGradient').attr('id','lg-'+idx)
+    .attr('x1','0%').attr('y1','0%').attr('x2','100%').attr('y2','0%');
+  lg.append('stop').attr('offset','0%').attr('stop-color',color).attr('stop-opacity',0.8);
+  lg.append('stop').attr('offset','100%').attr('stop-color',color).attr('stop-opacity',0.15);
+
+  const g = svg.append('g').attr('transform',`translate(80,${H/2})`);
+
+  svg.call(d3.zoom().scaleExtent([0.2,4]).on('zoom', e=>g.attr('transform',e.transform)));
+
+  // Build hierarchy
+  const root = d3.hierarchy({name: sec.label, desc: sec.desc, children: sec.children});
+
+  // Assign unique ids
+  root.each(d=>{ d.uid = ++uid; });
+
+  // Start: depth >= 2 collapsed
+  root.each(d=>{
+    if(d.depth >= 2 && d.children){ d._children=d.children; d.children=null; }
+  });
+
+  const tree = d3.tree().nodeSize([20, 190]);
+  let i2=0;
+
+  function update(src){
+    tree(root);
+    const nodes = root.descendants();
+    const links = root.links();
+
+    // ── LINKS ──
+    const lsel = g.selectAll('.lk').data(links, d=>d.target.uid);
+
+    const lEnter = lsel.enter().insert('path','g')
+      .attr('class','lk')
+      .attr('stroke', `url(#lg-${idx})`)
+      .attr('d',()=>{
+        const o={x:src.x0||0, y:src.y0||0};
+        return bez({source:o,target:o});
+      });
+
+    lsel.merge(lEnter).transition().duration(380).attr('d', bez);
+
+    lsel.exit().transition().duration(280)
+      .attr('d',()=>{ const o={x:src.x,y:src.x}; return bez({source:o,target:o}); })
+      .remove();
+
+    // ── NODES ──
+    const nsel = g.selectAll('.nd').data(nodes, d=>d.uid||(d.uid=++i2));
+
+    const nEnter = nsel.enter().append('g')
+      .attr('class','nd')
+      .attr('transform',()=>`translate(${src.y0||0},${src.x0||0})`)
+      .style('cursor','pointer')
+      .on('click',(e,d)=>{
+        e.stopPropagation();
+        if(d.children){ d._children=d.children; d.children=null; }
+        else if(d._children){ d.children=d._children; d._children=null; }
+        update(d);
+        showTip(e,d,color);
+      })
+      .on('mouseover',(e,d)=>showTip(e,d,color))
+      .on('mouseout',()=>hideTip());
+
+    // outer glow ring (for nodes with children)
+    nEnter.append('circle')
+      .attr('class','gring')
+      .attr('r',0)
+      .attr('fill','none')
+      .attr('stroke', color)
+      .attr('stroke-width',1)
+      .attr('opacity',0.2);
+
+    // main circle
+    nEnter.append('circle')
+      .attr('class','main')
+      .attr('r',0)
+      .attr('stroke-width', d=> d.depth===0 ? 2.5 : d.depth<=2 ? 2 : 1.5);
+
+    // label
+    nEnter.append('text')
+      .attr('dy','0.32em')
+      .style('font-size', d=> d.depth===0?'11px': d.depth===1?'10px': d.depth===2?'9.5px':'8.5px')
+      .style('font-weight', d=> d.depth<=1?'700': d.depth===2?'600':'400');
+
+    const nMerge = nsel.merge(nEnter);
+
+    nMerge.transition().duration(380)
+      .attr('transform', d=>`translate(${d.y},${d.x})`);
+
+    const r = d=> getR(d.depth);
+
+    nMerge.select('.gring').transition().duration(380)
+      .attr('r', d=> (d.children||d._children) ? r(d)+4 : 0)
+      .attr('opacity', d=> (d.children||d._children) ? 0.25 : 0);
+
+    nMerge.select('.main').transition().duration(380)
+      .attr('r', r)
+      .attr('fill', d=>{
+        if(d.depth===0) return color;
+        if(d.depth===1) return color+'cc';
+        if(d.depth===2) return color+'88';
+        if(d.depth===3) return color+'55';
+        return color+'33';
+      })
+      .attr('stroke', d=>{
+        if(d.depth===0) return '#ffffff';
+        if(!d.children && !d._children) return color+'66';
+        return color;
+      })
+      .attr('filter', d=> d.depth===0 ? `url(#gf-root-${idx})` : d.depth===1 ? `url(#gf-branch-${idx})` : null);
+
+    nMerge.select('text')
+      .attr('x', d=> (d.children||d._children) ? -(r(d)+7) : (r(d)+7))
+      .style('text-anchor', d=> (d.children||d._children) ? 'end' : 'start')
+      .attr('fill', d=> d.depth===0?'#fff': d.depth<=2 ? '#ddd' : '#aaa')
+      .text(d=> truncate(d.data.name, d.depth));
+
+    nsel.exit().transition().duration(280)
+      .attr('transform',()=>`translate(${src.y},${src.x})`)
+      .remove()
+      .select('.main').attr('r',0);
+
+    nodes.forEach(d=>{ d.x0=d.x; d.y0=d.y; });
+  }
+
+  function bez(d){
+    return `M${d.source.y},${d.source.x}
+            C${(d.source.y+d.target.y)/2},${d.source.x}
+             ${(d.source.y+d.target.y)/2},${d.target.x}
+             ${d.target.y},${d.target.x}`;
+  }
+
+  function truncate(name, depth){
+    const maxLen = depth===0?28: depth===1?22: depth===2?18:16;
+    return name.length>maxLen ? name.slice(0,maxLen-1)+'…' : name;
+  }
+
+  update(root);
+
+  // Store controls
+  wrap._root = root;
+  wrap._update = update;
+
+  wrap.expandAll = ()=>{
+    root.each(d=>{ if(d._children){ d.children=d._children; d._children=null; }});
+    update(root);
+  };
+  wrap.collapseAll = ()=>{
+    root.each(d=>{ if(d.depth>0 && d.children){ d._children=d.children; d.children=null; }});
+    update(root);
+  };
+  wrap.resetView = ()=>{
+    root.each(d=>{
+      if(d.depth>=2 && d.children){ d._children=d.children; d.children=null; }
+      else if(d.depth<2 && d._children){ d.children=d._children; d._children=null; }
+    });
+    update(root);
+  };
+}
+
+// ─── TOOLTIP ──────────────────────────────────────────────────────────────────
+const tip = document.getElementById('tip');
+function showTip(e, d, color){
+  const hasKids = d.children||d._children;
+  const kCount = (d.children||d._children||[]).length;
+  tip.querySelector('.tn').textContent = d.data.name;
+  tip.querySelector('.tn').style.color = color;
+  tip.querySelector('.td').textContent = d.data.desc || (hasKids ? `${kCount} sub-nodes` : 'Leaf node');
+  tip.querySelector('.ti').textContent = hasKids
+    ? (d.children ? 'Click to collapse ▲' : 'Click to expand ▼')
+    : 'Terminal node';
+  tip.style.display='block';
+  tip.style.left=(e.clientX+16)+'px';
+  tip.style.top=(e.clientY-12)+'px';
+}
+function hideTip(){ tip.style.display='none'; }
+
+// ─── BUILD UI ─────────────────────────────────────────────────────────────────
+const grid = document.getElementById('grid');
+const leg  = document.getElementById('leg');
+
+DATA.forEach((sec, si)=>{
+  const total = countAll({children:sec.children});
+
+  // Legend
+  const li = document.createElement('div');
+  li.className='leg';
+  li.innerHTML=`<div class="leg-dot" style="background:${sec.color}"></div>${sec.label}`;
+  li.onclick=()=>{
+    const card=document.getElementById('card-'+si);
+    card.scrollIntoView({behavior:'smooth',block:'start'});
+    if(!card.classList.contains('open')){ card.classList.add('open'); setTimeout(()=>buildGraph(sec,si),60); }
+  };
+  leg.appendChild(li);
+
+  // Card
+  const card = document.createElement('div');
+  card.className='graph-card'+(sec.id==='ds'?' open':'');
+  card.id='card-'+si;
+
+  card.innerHTML=`
+    <div class="card-head" onclick="toggle(${si})">
+      <div class="card-glow" style="background:${sec.color};box-shadow:0 0 12px ${sec.color}90"></div>
+      <div class="card-lbl" style="color:${sec.color}">${sec.label}</div>
+      ${sec.id==='ds'?'<span style="font-size:9px;background:'+sec.color+'22;color:'+sec.color+';padding:2px 8px;border-radius:99px;border:1px solid '+sec.color+'44">✦ NEW</span>':''}
+      <div class="card-cnt">${total} nodes</div>
+      <div class="card-arr">▼</div>
+    </div>
+    <div class="graph-body" id="gbody-${si}">
+      <div class="gtb">
+        <button onclick="document.getElementById('gbody-${si}').expandAll()">Expand All</button>
+        <button onclick="document.getElementById('gbody-${si}').collapseAll()">Collapse</button>
+        <button onclick="document.getElementById('gbody-${si}').resetView()">Reset</button>
+      </div>
+      <div class="depth-legend">
+        <div class="di"><div class="di-circle" style="width:12px;height:12px;background:${sec.color}"></div>Root</div>
+        <div class="di"><div class="di-circle" style="width:9px;height:9px;background:${sec.color}cc"></div>Category</div>
+        <div class="di"><div class="di-circle" style="width:7px;height:7px;background:${sec.color}88"></div>Sub</div>
+        <div class="di"><div class="di-circle" style="width:5px;height:5px;background:${sec.color}55"></div>Leaf</div>
+      </div>
+    </div>`;
+
+  grid.appendChild(card);
+
+  // Auto-build DS card immediately
+  if(sec.id==='ds') setTimeout(()=>buildGraph(sec,si), 120);
+});
+
+function toggle(si){
+  const card=document.getElementById('card-'+si);
+  const isOpen=card.classList.toggle('open');
+  if(isOpen) setTimeout(()=>buildGraph(DATA[si],si),50);
+}
+
+function openAll(){
+  DATA.forEach((_,si)=>{
+    const card=document.getElementById('card-'+si);
+    if(!card.classList.contains('open')){
+      card.classList.add('open');
+      setTimeout(()=>buildGraph(DATA[si],si), si*100);
+    }
+  });
+}
+function closeAll(){
+  DATA.forEach((_,si)=>document.getElementById('card-'+si).classList.remove('open'));
+}
+function resetAll(){
+  DATA.forEach((_,si)=>{
+    const w=document.getElementById('gbody-'+si);
+    if(w&&w.resetView) w.resetView();
+  });
+}
+
+// Search
+document.getElementById('srch').addEventListener('input', function(){
+  const q=this.value.trim().toLowerCase();
+  if(!q){
+    d3.selectAll('.nd').classed('hl',false).classed('dm',false);
+    return;
+  }
+  // open all
+  DATA.forEach((_,si)=>{
+    const card=document.getElementById('card-'+si);
+    if(!card.classList.contains('open')){
+      card.classList.add('open');
+      setTimeout(()=>{ buildGraph(DATA[si],si); setTimeout(doSearch,400); }, si*80);
+    }
+  });
+  setTimeout(doSearch, 600);
+
+  function doSearch(){
+    d3.selectAll('.nd').each(function(d){
+      const m = d.data.name.toLowerCase().includes(q) ||
+                (d.data.desc&&d.data.desc.toLowerCase().includes(q));
+      d3.select(this).classed('hl',m).classed('dm',!m);
+    });
+  }
+});
+</script>
+</body>
+</html>
