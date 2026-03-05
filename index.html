@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complete Machine Learning Taxonomy</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090f;
+    --surface: #0f0f1a;
+    --border: #1e1e35;
+    --text: #e2e2f0;
+    --muted: #666688;
+    --accent: #7c6aff;
+
+    --c1: #7c6aff; /* Supervised */
+    --c2: #00d4a8; /* Unsupervised */
+    --c3: #ff6b6b; /* Reinforcement */
+    --c4: #ffb347; /* Deep Learning */
+    --c5: #64c8ff; /* Semi/Self Supervised */
+    --c6: #ff7eb3; /* Transfer/Meta */
+    --c7: #a8ff78; /* Ensemble */
+    --c8: #ffd700; /* Fundamentals */
+    --c9: #d0a0ff; /* Generative */
+    --c10: #ff9500; /* Probabilistic */
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 30px;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #7c6aff, #00d4a8, #ff6b6b, #ffb347);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* CONTROLS */
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+  }
+
+  .search-wrap::before {
+    content: '⌕';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 18px;
+    pointer-events: none;
+  }
+
+  #search {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px 10px 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+  }
+
+  #search:focus { border-color: var(--accent); }
+
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .stats {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 10px 0;
+  }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 28px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  .legend-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* TREE */
+  .tree-root {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* NODE CARD */
+  .node {
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+
+  .node-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .node-header:hover { background: rgba(255,255,255,0.04); }
+
+  .toggle-icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    color: var(--muted);
+    font-style: normal;
+  }
+
+  .node.open > .node-header .toggle-icon { transform: rotate(90deg); }
+
+  .node-label {
+    font-size: 13px;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .node-tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 99px;
+    color: var(--bg);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  .node-children {
+    display: none;
+    padding-left: 24px;
+    border-left: 1px solid var(--border);
+    margin-left: 20px;
+    margin-top: 4px;
+    padding-bottom: 6px;
+  }
+
+  .node.open > .node-children { display: block; }
+
+  /* LEAF items */
+  .leaf-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 6px;
+    padding: 8px 0 10px 0;
+  }
+
+  .leaf {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    color: #c8c8e0;
+    transition: all 0.15s;
+    cursor: default;
+    line-height: 1.4;
+  }
+
+  .leaf:hover {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(124,106,255,0.4);
+    color: var(--text);
+  }
+
+  .leaf .leaf-name { font-weight: 600; }
+  .leaf .leaf-desc { color: var(--muted); font-size: 10px; margin-top: 2px; }
+
+  /* Depth coloring for borders */
+  .depth-0 > .node-header { border-left-color: transparent; background: var(--surface); border-radius: 8px 8px 0 0; }
+  .depth-1 > .node-header { border-left-color: currentColor; }
+  .depth-2 > .node-header { border-left-color: currentColor; opacity: 0.95; }
+
+  /* highlight search */
+  .hl { background: rgba(255,211,0,0.25); border-radius: 2px; color: #ffd700; }
+
+  .hidden { display: none !important; }
+
+  /* SECTION WRAPPERS at top level */
+  .section {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .section-header {
+    padding: 14px 18px;
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+  }
+
+  .section-header:hover { opacity: 0.9; }
+
+  .section-body {
+    display: none;
+    padding: 12px 14px 14px;
+  }
+
+  .section.open .section-body { display: block; }
+
+  .section-toggle {
+    margin-left: auto;
+    font-size: 13px;
+    transition: transform 0.2s;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .section.open .section-toggle { transform: rotate(180deg); }
+
+  .count-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.5);
+    font-weight: 400;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .leaf-list { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="title">Machine Learning<br>Complete Taxonomy</div>
+    <div class="subtitle">Every Algorithm · Every Paradigm · Every Concept</div>
+  </header>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="Search algorithms, concepts..." autocomplete="off">
+    </div>
+    <button class="btn" onclick="expandAll()">Expand All</button>
+    <button class="btn" onclick="collapseAll()">Collapse All</button>
+    <button class="btn" onclick="expandTopLevel()">Top Level Only</button>
+  </div>
+
+  <div class="stats" id="stats">Loading taxonomy...</div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="tree-root" id="tree"></div>
+
+  <footer>COMPREHENSIVE ML TAXONOMY · All major paradigms, algorithms, architectures, and concepts</footer>
+</div>
+
+<script>
+const TAXONOMY = [
+  {
+    id: "supervised", label: "Supervised Learning", color: "#7c6aff", tag: "Core",
+    desc: "Learning from labeled input-output pairs",
+    children: [
+      {
+        label: "Regression", children: [
+          { label: "Linear Methods", leaves: [
+            { name: "Ordinary Least Squares (OLS)", desc: "Minimizes sum of squared residuals" },
+            { name: "Simple Linear Regression", desc: "Single feature → continuous output" },
+            { name: "Multiple Linear Regression", desc: "Multiple features → continuous output" },
+            { name: "Polynomial Regression", desc: "Fits non-linear curves via polynomial features" },
+            { name: "Ridge Regression (L2)", desc: "L2 regularization to prevent overfitting" },
+            { name: "Lasso Regression (L1)", desc: "L1 regularization; sparse solutions" },
+            { name: "ElasticNet", desc: "L1+L2 combination" },
+            { name: "Bayesian Linear Regression", desc: "Probabilistic prior on weights" },
+            { name: "Robust Regression (Huber)", desc: "Resistant to outliers" },
+            { name: "Quantile Regression", desc: "Estimates conditional quantiles" },
+            { name: "Orthogonal Matching Pursuit", desc: "Greedy sparse approximation" },
+            { name: "LARS (Least Angle Regression)", desc: "Path of LASSO solutions" },
+          ]},
+          { label: "Tree-Based Regression", leaves: [
+            { name: "Decision Tree Regressor (CART)", desc: "Binary splits minimizing MSE" },
+            { name: "Random Forest Regressor", desc: "Bagged ensemble of trees" },
+            { name: "Extra Trees Regressor", desc: "Extremely randomized trees" },
+            { name: "Gradient Boosted Trees Regressor", desc: "Boosted ensemble" },
+            { name: "XGBoost Regressor", desc: "Efficient gradient boosting" },
+            { name: "LightGBM Regressor", desc: "Histogram-based, leaf-wise" },
+            { name: "CatBoost Regressor", desc: "Native categorical handling" },
+          ]},
+          { label: "Kernel & Distance Regression", leaves: [
+            { name: "Support Vector Regression (SVR)", desc: "Epsilon-insensitive tube" },
+            { name: "K-Nearest Neighbors Regression", desc: "Averages k neighbor values" },
+            { name: "Gaussian Process Regression", desc: "Non-parametric Bayesian approach" },
+            { name: "Kernel Ridge Regression", desc: "Ridge in feature space" },
+            { name: "Nadaraya-Watson Estimator", desc: "Kernel-weighted local average" },
+          ]},
+          { label: "Neural Network Regression", leaves: [
+            { name: "MLP Regressor", desc: "Feedforward NN for regression" },
+            { name: "Deep Neural Network Regression", desc: "Multi-layer deep models" },
+            { name: "Radial Basis Function Network", desc: "RBF kernel hidden layer" },
+            { name: "Extreme Learning Machine (ELM)", desc: "Random hidden weights, analytic output" },
+          ]},
+          { label: "Statistical Regression", leaves: [
+            { name: "Generalized Linear Models (GLM)", desc: "Poisson, Gamma, Tweedie" },
+            { name: "Isotonic Regression", desc: "Monotone-constrained fitting" },
+            { name: "Spline Regression", desc: "Piecewise polynomial fitting" },
+            { name: "LOESS / LOWESS", desc: "Locally weighted scatterplot smoothing" },
+            { name: "Theil-Sen Estimator", desc: "Median-based robust regression" },
+          ]},
+        ]
+      },
+      {
+        label: "Classification", children: [
+          { label: "Linear Classifiers", leaves: [
+            { name: "Logistic Regression", desc: "Log-odds linear model" },
+            { name: "Linear Discriminant Analysis (LDA)", desc: "Maximizes class separability" },
+            { name: "Quadratic Discriminant Analysis (QDA)", desc: "Quadratic decision boundary" },
+            { name: "Perceptron", desc: "Online linear classifier" },
+            { name: "Passive-Aggressive Classifier", desc: "Online margin-based" },
+            { name: "SGD Classifier", desc: "Stochastic gradient linear SVM/logistic" },
+          ]},
+          { label: "Probabilistic / Naive Bayes", leaves: [
+            { name: "Gaussian Naive Bayes", desc: "Continuous features, Gaussian likelihood" },
+            { name: "Multinomial Naive Bayes", desc: "Count-based features (NLP)" },
+            { name: "Bernoulli Naive Bayes", desc: "Binary feature occurrence" },
+            { name: "Complement Naive Bayes", desc: "Suited for imbalanced text" },
+            { name: "Categorical Naive Bayes", desc: "Categorical features" },
+          ]},
+          { label: "Support Vector Machines", leaves: [
+            { name: "Linear SVM", desc: "Hyperplane with max margin" },
+            { name: "RBF-kernel SVM", desc: "Gaussian kernel for non-linear" },
+            { name: "Polynomial-kernel SVM", desc: "Degree-d polynomial kernel" },
+            { name: "Sigmoid-kernel SVM", desc: "Tanh-based kernel" },
+            { name: "One-Class SVM", desc: "Novelty / anomaly detection" },
+            { name: "Nu-SVM", desc: "Alternative parameterization" },
+          ]},
+          { label: "Tree-Based Classifiers", leaves: [
+            { name: "Decision Tree (ID3)", desc: "Information gain splits" },
+            { name: "Decision Tree (C4.5 / C5.0)", desc: "Gain ratio, handles missing data" },
+            { name: "Decision Tree (CART)", desc: "Gini impurity splits" },
+            { name: "Random Forest", desc: "Bagging of decision trees" },
+            { name: "Extra Trees", desc: "Random thresholds" },
+            { name: "AdaBoost", desc: "Adaptive boosting of weak learners" },
+            { name: "Gradient Boosted Trees (GBT)", desc: "Gradient descent on tree ensemble" },
+            { name: "XGBoost", desc: "Regularized gradient boosting" },
+            { name: "LightGBM", desc: "Fast histogram-based boosting" },
+            { name: "CatBoost", desc: "Ordered boosting, cat features" },
+            { name: "HistGradientBoosting", desc: "Sklearn native histogram boosting" },
+          ]},
+          { label: "Instance-Based", leaves: [
+            { name: "K-Nearest Neighbors (KNN)", desc: "Classify by majority of k neighbors" },
+            { name: "Weighted KNN", desc: "Distance-weighted voting" },
+            { name: "Learning Vector Quantization (LVQ)", desc: "Prototype-based classif." },
+            { name: "Radius Neighbors Classifier", desc: "All points within radius" },
+          ]},
+          { label: "Neural Network Classifiers", leaves: [
+            { name: "Multilayer Perceptron (MLP)", desc: "Dense feedforward NN" },
+            { name: "CNN (Convolutional)", desc: "For image/spatial data" },
+            { name: "RNN / LSTM / GRU", desc: "Sequence classification" },
+            { name: "Transformer Classifier", desc: "Self-attention encoder" },
+            { name: "Graph Neural Network (GNN)", desc: "Node/graph classification" },
+            { name: "Capsule Network", desc: "Equivariant routing" },
+            { name: "Extreme Learning Machine", desc: "Random hidden layer" },
+          ]},
+          { label: "Multi-Output / Multi-label", leaves: [
+            { name: "One-vs-Rest (OvR)", desc: "Binary classifier per class" },
+            { name: "One-vs-One (OvO)", desc: "Classifier per class pair" },
+            { name: "Output Code Classification", desc: "Error-correcting output codes" },
+            { name: "Label Powerset", desc: "Multi-label as multi-class" },
+            { name: "Binary Relevance", desc: "Independent binary classifiers" },
+            { name: "Classifier Chains", desc: "Sequentially conditioned" },
+            { name: "RAkEL", desc: "Random label subsets" },
+          ]},
+          { label: "Ordinal Classification", leaves: [
+            { name: "Ordinal Logistic Regression", desc: "Proportional odds model" },
+            { name: "Frank & Hall Method", desc: "Binary decomposition" },
+            { name: "CORAL", desc: "Consistent rank logits" },
+          ]},
+        ]
+      },
+      {
+        label: "Sequence & Structured Prediction", children: [
+          { label: "Sequence Modeling", leaves: [
+            { name: "Hidden Markov Model (HMM)", desc: "Probabilistic state sequences" },
+            { name: "Conditional Random Field (CRF)", desc: "Discriminative sequence labeling" },
+            { name: "Maximum Entropy Markov Model", desc: "Local normalization" },
+            { name: "Structured SVM", desc: "Joint prediction with margin" },
+          ]},
+          { label: "Time Series Forecasting", leaves: [
+            { name: "ARIMA / SARIMA", desc: "AutoRegressive Integrated Moving Average" },
+            { name: "ARMA", desc: "AR + MA without differencing" },
+            { name: "VAR (Vector Autoregression)", desc: "Multivariate TS" },
+            { name: "Exponential Smoothing (Holt-Winters)", desc: "Trend+seasonal decomp" },
+            { name: "TBATS", desc: "Multiple seasonalities" },
+            { name: "Prophet (Meta)", desc: "Additive trend + seasonality" },
+            { name: "N-BEATS", desc: "Neural basis expansion TS" },
+            { name: "Temporal Fusion Transformer", desc: "Attention-based multi-horizon" },
+            { name: "DeepAR", desc: "Autoregressive RNN (Amazon)" },
+            { name: "WaveNet", desc: "Dilated causal CNN" },
+            { name: "Mamba (SSM)", desc: "Selective state space model" },
+          ]},
+        ]
+      }
+    ]
+  },
+  {
+    id: "unsupervised", label: "Unsupervised Learning", color: "#00d4a8", tag: "Core",
+    desc: "Finding structure in unlabeled data",
+    children: [
+      {
+        label: "Clustering", children: [
+          { label: "Centroid-Based", leaves: [
+            { name: "K-Means", desc: "Lloyd's algorithm, Euclidean centroids" },
+            { name: "K-Means++ (init)", desc: "Distance-proportional seeding" },
+            { name: "K-Medoids (PAM)", desc: "Actual data point centroids" },
+            { name: "K-Medians", desc: "Median-based centroid" },
+            { name: "Fuzzy C-Means", desc: "Soft membership assignment" },
+            { name: "Mini-Batch K-Means", desc: "Large-scale approximate K-Means" },
+          ]},
+          { label: "Hierarchical", leaves: [
+            { name: "Agglomerative (Single Link)", desc: "Minimum distance merge" },
+            { name: "Agglomerative (Complete Link)", desc: "Maximum distance merge" },
+            { name: "Agglomerative (Average Link)", desc: "Mean distance merge" },
+            { name: "Agglomerative (Ward)", desc: "Minimize within-cluster variance" },
+            { name: "Divisive (DIANA)", desc: "Top-down splitting" },
+            { name: "BIRCH", desc: "CF-tree for large datasets" },
+          ]},
+          { label: "Density-Based", leaves: [
+            { name: "DBSCAN", desc: "Density connected components" },
+            { name: "OPTICS", desc: "Variable density DBSCAN" },
+            { name: "HDBSCAN", desc: "Hierarchical + soft clusters" },
+            { name: "Mean Shift", desc: "Mode-seeking kernel density" },
+            { name: "DENCLUE", desc: "Density function estimation" },
+          ]},
+          { label: "Model-Based", leaves: [
+            { name: "Gaussian Mixture Model (GMM)", desc: "EM-optimized soft clusters" },
+            { name: "Bayesian GMM (DPGMM)", desc: "Infers number of clusters" },
+            { name: "Latent Dirichlet Allocation (LDA)", desc: "Topic modeling as clustering" },
+            { name: "HMM-based clustering", desc: "Sequential data clusters" },
+          ]},
+          { label: "Graph/Spectral", leaves: [
+            { name: "Spectral Clustering", desc: "Graph Laplacian eigenvectors" },
+            { name: "Affinity Propagation", desc: "Message-passing exemplars" },
+            { name: "Markov Cluster Algorithm (MCL)", desc: "Flow simulation on graph" },
+            { name: "Chinese Whispers", desc: "Label propagation clustering" },
+          ]},
+          { label: "Subspace / Grid", leaves: [
+            { name: "CLIQUE", desc: "Density grid subspace" },
+            { name: "PROCLUS", desc: "Projected clustering" },
+            { name: "ORCLUS", desc: "Arbitrarily oriented subspaces" },
+            { name: "Biclustering (Spectral Co-clust.)", desc: "Row and column grouping" },
+          ]},
+        ]
+      },
+      {
+        label: "Dimensionality Reduction", children: [
+          { label: "Linear Methods", leaves: [
+            { name: "PCA (Principal Component Analysis)", desc: "Maximize variance directions" },
+            { name: "Kernel PCA", desc: "Non-linear via kernel trick" },
+            { name: "Randomized PCA", desc: "Approximate large-scale PCA" },
+            { name: "Incremental PCA", desc: "Online/mini-batch PCA" },
+            { name: "Sparse PCA", desc: "L1-penalized loadings" },
+            { name: "MiniMax PCA / Whitening", desc: "Unit variance transform" },
+            { name: "Linear Discriminant Analysis (LDA)", desc: "Supervised max-separation" },
+            { name: "Factor Analysis", desc: "Latent factor model" },
+            { name: "ICA (Independent Component Analysis)", desc: "Statistically independent sources" },
+            { name: "NMF (Non-Negative Matrix Fact.)", desc: "Parts-based representation" },
+            { name: "SVD / Truncated SVD (LSA)", desc: "Latent semantic analysis" },
+            { name: "CCA (Canonical Correlation Analysis)", desc: "Correlated projections" },
+          ]},
+          { label: "Non-Linear / Manifold Methods", leaves: [
+            { name: "t-SNE", desc: "Probabilistic neighbor embedding" },
+            { name: "UMAP", desc: "Riemannian manifold approximation" },
+            { name: "Isomap", desc: "Geodesic distance MDS" },
+            { name: "LLE (Locally Linear Embedding)", desc: "Local patch reconstruction" },
+            { name: "Modified LLE (MLLE)", desc: "Improved regularity" },
+            { name: "Hessian LLE", desc: "Uses Hessian eigenmaps" },
+            { name: "LTSA", desc: "Local tangent space alignment" },
+            { name: "MDS (Multi-Dim. Scaling)", desc: "Preserve pairwise distances" },
+            { name: "Laplacian Eigenmaps", desc: "Graph Laplacian embedding" },
+            { name: "Diffusion Maps", desc: "Diffusion process geometry" },
+            { name: "PHATE", desc: "Potential of Heat-diffusion" },
+            { name: "TriMap", desc: "Triplet constraints embedding" },
+            { name: "PaCMAP", desc: "Preserves global/local structure" },
+          ]},
+          { label: "Autoencoder-Based", leaves: [
+            { name: "Vanilla Autoencoder", desc: "Encoder–bottleneck–decoder" },
+            { name: "Sparse Autoencoder", desc: "L1 activity regularization" },
+            { name: "Denoising Autoencoder", desc: "Reconstruct corrupted input" },
+            { name: "Contractive Autoencoder", desc: "Penalizes Jacobian norm" },
+            { name: "Variational Autoencoder (VAE)", desc: "Latent Gaussian prior" },
+            { name: "β-VAE", desc: "Disentangled representations" },
+          ]},
+          { label: "Feature Selection", leaves: [
+            { name: "Filter: Variance Threshold", desc: "Remove near-zero variance" },
+            { name: "Filter: Correlation / Chi-squared", desc: "Statistical relevance" },
+            { name: "Filter: Mutual Information", desc: "Non-linear dependence" },
+            { name: "Wrapper: RFE", desc: "Recursive feature elimination" },
+            { name: "Wrapper: Boruta", desc: "Shadow feature comparison" },
+            { name: "Embedded: Lasso / Ridge", desc: "Regularization-based" },
+            { name: "Embedded: Tree Importance", desc: "Gini/permutation importance" },
+            { name: "SHAP-based Selection", desc: "Shapley value importance" },
+          ]},
+        ]
+      },
+      {
+        label: "Anomaly & Novelty Detection", children: [
+          { label: "Statistical Methods", leaves: [
+            { name: "Z-Score / 3-Sigma Rule", desc: "Standard deviation threshold" },
+            { name: "IQR (Tukey) Method", desc: "Interquartile range fence" },
+            { name: "Grubbs Test", desc: "Single-outlier detection" },
+            { name: "Elliptic Envelope", desc: "Robust covariance estimation" },
+            { name: "CUSUM", desc: "Cumulative sum for change point" },
+          ]},
+          { label: "Proximity-Based", leaves: [
+            { name: "Local Outlier Factor (LOF)", desc: "Local density deviation" },
+            { name: "KNN-based Outlier Score", desc: "Distance to k-th neighbor" },
+            { name: "Connectivity-based Outlier Factor", desc: "COF" },
+            { name: "LOCI", desc: "Local correlation integral" },
+          ]},
+          { label: "Model-Based", leaves: [
+            { name: "Isolation Forest", desc: "Anomalies isolate faster" },
+            { name: "One-Class SVM", desc: "Boundary around normal data" },
+            { name: "SVDD", desc: "Support vector data description" },
+            { name: "Autoencoder Anomaly Detection", desc: "High reconstruction error" },
+            { name: "VAE-based Detection", desc: "ELBO as anomaly score" },
+            { name: "Deep SVDD", desc: "Deep one-class classification" },
+            { name: "ANOGAN", desc: "GAN latent search" },
+          ]},
+          { label: "Time-Series Anomalies", leaves: [
+            { name: "LSTM-based Detection", desc: "Prediction error threshold" },
+            { name: "Matrix Profile (STUMPY)", desc: "Subsequence anomalies" },
+            { name: "Seasonal Decomposition", desc: "Residual outlier detection" },
+            { name: "Spectral Residual", desc: "Frequency-domain method" },
+          ]},
+        ]
+      },
+      {
+        label: "Density Estimation", leaves: [
+          { name: "Kernel Density Estimation (KDE)", desc: "Non-parametric density" },
+          { name: "Histogram Density Estimation", desc: "Binned frequency" },
+          { name: "Gaussian Mixture Models", desc: "Mixture of Gaussians" },
+          { name: "Normalizing Flows", desc: "Learned invertible transforms" },
+          { name: "MADE", desc: "Masked autoencoder for density" },
+          { name: "PixelCNN / PixelRNN", desc: "Autoregressive image density" },
+          { name: "Neural Spline Flows", desc: "Piecewise rational splines" },
+          { name: "NICE / RealNVP", desc: "Coupling layer flows" },
+          { name: "Glow", desc: "1×1 invertible convolutions" },
+        ]
+      },
+      {
+        label: "Association Rule Learning", leaves: [
+          { name: "Apriori", desc: "Frequent itemset → rules via pruning" },
+          { name: "FP-Growth", desc: "Frequent pattern tree, no candidate gen" },
+          { name: "Eclat", desc: "Vertical data format, intersection" },
+          { name: "H-Mine", desc: "Hyper-linked mining structure" },
+          { name: "OPUS Search", desc: "Optimal rule search" },
+          { name: "Sequential Pattern Mining (PrefixSpan)", desc: "Order matters" },
+          { name: "SPADE", desc: "Sequence pattern discovery" },
+        ]
+      },
+    ]
+  },
+  {
+    id: "deeplearning", label: "Deep Learning", color: "#ffb347", tag: "Core",
+    desc: "Multi-layer neural networks learning hierarchical representations",
+    children: [
+      {
+        label: "Foundational Architectures", children: [
+          { label: "Feedforward / MLP", leaves: [
+            { name: "Perceptron", desc: "Single-layer linear classifier" },
+            { name: "Multilayer Perceptron (MLP)", desc: "Stacked dense layers + activations" },
+            { name: "Deep Neural Network (DNN)", desc: "MLP with many layers" },
+            { name: "Radial Basis Function Network", desc: "RBF kernel hidden layer" },
+          ]},
+          { label: "Convolutional Neural Networks (CNN)", leaves: [
+            { name: "LeNet-5", desc: "Pioneer conv net (1998)" },
+            { name: "AlexNet", desc: "Deep CNN with ReLU, dropout (2012)" },
+            { name: "VGGNet (VGG-16/19)", desc: "Very deep 3×3 convolutions" },
+            { name: "GoogLeNet / Inception v1", desc: "Inception module (2014)" },
+            { name: "Inception v2/v3", desc: "Factorized convolutions" },
+            { name: "Inception v4 / InceptionResNet", desc: "Residual connections" },
+            { name: "ResNet (18/34/50/101/152)", desc: "Skip connections, very deep" },
+            { name: "ResNeXt", desc: "Grouped convolutions" },
+            { name: "DenseNet", desc: "Dense connections between all layers" },
+            { name: "SqueezeNet", desc: "1×1 filters for compression" },
+            { name: "MobileNet v1/v2/v3", desc: "Depthwise separable convolutions" },
+            { name: "ShuffleNet v1/v2", desc: "Channel shuffle efficiency" },
+            { name: "EfficientNet (B0-B7)", desc: "Compound scaling NAS" },
+            { name: "EfficientNetV2", desc: "Progressive learning" },
+            { name: "NASNet", desc: "Neural Architecture Search" },
+            { name: "SENet (Squeeze-and-Excitation)", desc: "Channel attention" },
+            { name: "CBAMNet", desc: "Channel+spatial attention" },
+            { name: "ConvNeXt", desc: "Modern pure-CNN (2022)" },
+            { name: "RegNet", desc: "Regularized network design space" },
+          ]},
+          { label: "Recurrent Neural Networks", leaves: [
+            { name: "Vanilla RNN (Elman)", desc: "Simple recurrent connection" },
+            { name: "Jordan Network", desc: "Output feedback" },
+            { name: "LSTM (Long Short-Term Memory)", desc: "Forget/input/output gates" },
+            { name: "Bidirectional LSTM (BiLSTM)", desc: "Forward + backward pass" },
+            { name: "Stacked LSTM", desc: "Multiple recurrent layers" },
+            { name: "GRU (Gated Recurrent Unit)", desc: "Simplified LSTM (2014)" },
+            { name: "Bidirectional GRU", desc: "Bidirectional GRU" },
+            { name: "Echo State Network (ESN)", desc: "Reservoir computing" },
+            { name: "Liquid State Machine (LSM)", desc: "Spiking neuron reservoir" },
+            { name: "Clockwork RNN", desc: "Different timescale modules" },
+            { name: "Phased LSTM", desc: "Time-gated updates" },
+          ]},
+          { label: "Transformer Architectures", leaves: [
+            { name: "Original Transformer (Vaswani 2017)", desc: "Encoder-decoder attention" },
+            { name: "BERT", desc: "Bidirectional encoder pre-training" },
+            { name: "RoBERTa", desc: "Robustly optimized BERT" },
+            { name: "ALBERT", desc: "Parameter-efficient BERT" },
+            { name: "DistilBERT", desc: "Knowledge-distilled BERT" },
+            { name: "DeBERTa", desc: "Disentangled attention" },
+            { name: "XLNet", desc: "Permutation language model" },
+            { name: "ELECTRA", desc: "Replaced token detection" },
+            { name: "GPT-1/2/3/4", desc: "Autoregressive LM" },
+            { name: "GPT-Neo / GPT-J / GPT-NeoX", desc: "Open GPT variants" },
+            { name: "T5 / T5-XXL", desc: "Text-to-text transfer" },
+            { name: "UL2", desc: "Unified language learner" },
+            { name: "PaLM / PaLM-2", desc: "Pathways language model" },
+            { name: "LLaMA / LLaMA-2 / LLaMA-3", desc: "Meta open LLM" },
+            { name: "Mistral / Mixtral (MoE)", desc: "Efficient open models" },
+            { name: "Falcon", desc: "TII open LLM" },
+            { name: "Gemma / Gemma-2", desc: "Google lightweight open" },
+            { name: "Vision Transformer (ViT)", desc: "Patches as tokens" },
+            { name: "DeiT", desc: "Data-efficient ViT" },
+            { name: "Swin Transformer", desc: "Shifted window attention" },
+            { name: "CLIP", desc: "Contrastive image-text" },
+            { name: "ALIGN", desc: "Image-text alignment" },
+            { name: "Whisper", desc: "Speech recognition transformer" },
+            { name: "AST (Audio Spectrogram Transformer)", desc: "Audio classification" },
+            { name: "DALL-E 1/2/3", desc: "Text-to-image (OpenAI)" },
+            { name: "Flamingo / PaLI", desc: "Vision-language models" },
+            { name: "LLaVA", desc: "Large language + vision" },
+            { name: "Qwen-VL / InternVL", desc: "Multimodal VLMs" },
+          ]},
+          { label: "State Space Models (SSM)", leaves: [
+            { name: "S4 (Structured State Space)", desc: "Long-range dependencies" },
+            { name: "Mamba", desc: "Selective SSM (2023)" },
+            { name: "Mamba-2", desc: "SSD framework" },
+            { name: "RWKV", desc: "Linear attention RNN" },
+            { name: "RetNet", desc: "Retention mechanism" },
+            { name: "Hyena", desc: "Sub-quadratic convolution" },
+          ]},
+        ]
+      },
+      {
+        label: "Generative Deep Models", children: [
+          { label: "Generative Adversarial Networks (GAN)", leaves: [
+            { name: "Vanilla GAN (Goodfellow 2014)", desc: "Min-max game G vs D" },
+            { name: "DCGAN", desc: "Deep convolutional GAN" },
+            { name: "WGAN", desc: "Wasserstein distance loss" },
+            { name: "WGAN-GP", desc: "Gradient penalty" },
+            { name: "LSGAN", desc: "Least squares loss" },
+            { name: "Progressive GAN (ProGAN)", desc: "Progressive resolution growth" },
+            { name: "StyleGAN / StyleGAN2 / StyleGAN3", desc: "Style-based generator" },
+            { name: "BigGAN", desc: "Large-scale conditional GAN" },
+            { name: "CycleGAN", desc: "Unpaired image-to-image" },
+            { name: "Pix2Pix", desc: "Paired image-to-image" },
+            { name: "StarGAN / StarGAN2", desc: "Multi-domain translation" },
+            { name: "SRGAN / ESRGAN", desc: "Super-resolution GAN" },
+            { name: "DiscoGAN", desc: "Cross-domain relationships" },
+            { name: "InfoGAN", desc: "Mutual information disentanglement" },
+            { name: "ACGAN", desc: "Auxiliary classifier GAN" },
+            { name: "CGAN (Conditional GAN)", desc: "Class-conditioned generation" },
+            { name: "GauGAN / SPADE", desc: "Semantic image synthesis" },
+            { name: "ControlGAN", desc: "Fine-grained control" },
+          ]},
+          { label: "Variational Autoencoders (VAE)", leaves: [
+            { name: "Vanilla VAE", desc: "ELBO objective, KL divergence" },
+            { name: "β-VAE", desc: "Disentangled representations" },
+            { name: "Factor-VAE", desc: "Total correlation penalty" },
+            { name: "CVAE (Conditional VAE)", desc: "Class-conditional prior" },
+            { name: "VQ-VAE / VQ-VAE-2", desc: "Discrete codebook" },
+            { name: "NVAE", desc: "Hierarchical VAE (NVIDIA)" },
+            { name: "RAE", desc: "Regularized autoencoder" },
+            { name: "VQGAN", desc: "VQ-VAE + adversarial" },
+          ]},
+          { label: "Diffusion Models", leaves: [
+            { name: "DDPM", desc: "Denoising diffusion probabilistic" },
+            { name: "DDIM", desc: "Deterministic sampling" },
+            { name: "Score Matching (NCSN)", desc: "Score-based SDEs" },
+            { name: "SDE-based Diffusion", desc: "Stochastic differential eq." },
+            { name: "Stable Diffusion (LDM)", desc: "Latent diffusion model" },
+            { name: "DALL-E 2", desc: "CLIP + diffusion decoder" },
+            { name: "DALL-E 3", desc: "Improved caption fidelity" },
+            { name: "Imagen", desc: "Cascaded diffusion (Google)" },
+            { name: "Midjourney", desc: "Proprietary diffusion" },
+            { name: "ControlNet", desc: "Spatial control for diffusion" },
+            { name: "DreamBooth", desc: "Fine-tune on subject" },
+            { name: "Textual Inversion", desc: "New text embeddings" },
+            { name: "LoRA for Diffusion", desc: "Low-rank adaptation" },
+            { name: "InstructPix2Pix", desc: "Text-instructed editing" },
+            { name: "Flux", desc: "Flow-matching diffusion" },
+            { name: "Consistency Models", desc: "Few-step generation" },
+          ]},
+          { label: "Normalizing Flows", leaves: [
+            { name: "NICE", desc: "Non-linear independent components" },
+            { name: "RealNVP", desc: "Real-valued non-volume preserving" },
+            { name: "Glow", desc: "1×1 convolutions + actnorm" },
+            { name: "MAF (Masked Autoregressive Flow)", desc: "Autoregressive transforms" },
+            { name: "IAF (Inverse Autoregressive Flow)", desc: "Fast sampling" },
+            { name: "Neural Spline Flow", desc: "Piecewise rational quadratic" },
+            { name: "Residual Flow", desc: "Contractive residual maps" },
+            { name: "Flow Matching", desc: "ODE-based flow" },
+          ]},
+          { label: "Autoregressive Models", leaves: [
+            { name: "PixelCNN / PixelCNN++", desc: "Image generation pixel-by-pixel" },
+            { name: "PixelRNN", desc: "LSTM-based autoregressive" },
+            { name: "WaveNet", desc: "Audio waveform generation" },
+            { name: "WaveGlow", desc: "Flow-based vocoder" },
+            { name: "WaveRNN", desc: "Efficient speech synthesis" },
+            { name: "SampleRNN", desc: "Hierarchical audio model" },
+            { name: "VQ-Transformer", desc: "Discrete token transformers" },
+          ]},
+          { label: "Energy-Based Models (EBM)", leaves: [
+            { name: "Boltzmann Machine (BM)", desc: "Fully connected stochastic" },
+            { name: "Restricted Boltzmann Machine (RBM)", desc: "Bipartite energy model" },
+            { name: "Deep Belief Network (DBN)", desc: "Stacked RBMs" },
+            { name: "Deep Boltzmann Machine (DBM)", desc: "Undirected multi-layer" },
+            { name: "EBM with MCMC", desc: "Langevin dynamics sampling" },
+            { name: "IGEBM", desc: "Joint EBM (image)" },
+            { name: "JEM (Joint Energy Model)", desc: "Classification + generation" },
+          ]},
+        ]
+      },
+      {
+        label: "Specialized Architectures", children: [
+          { label: "Graph Neural Networks (GNN)", leaves: [
+            { name: "GCN (Graph Conv. Network)", desc: "Spectral node classification" },
+            { name: "GraphSAGE", desc: "Inductive neighborhood sampling" },
+            { name: "GAT (Graph Attention Network)", desc: "Attention-weighted aggregation" },
+            { name: "GIN (Graph Isomorphism Net)", desc: "Weisfeiler-Leman powerful" },
+            { name: "MPNN (Message Passing NN)", desc: "General message passing" },
+            { name: "ChebNet", desc: "Chebyshev spectral filters" },
+            { name: "DiffPool", desc: "Hierarchical graph pooling" },
+            { name: "EdgeConv", desc: "Dynamic graph features" },
+            { name: "RGCN", desc: "Relational GCN" },
+            { name: "HGT", desc: "Heterogeneous graph transformer" },
+            { name: "GraphTransformer", desc: "Transformer on graphs" },
+            { name: "Equivariant GNN (E(n)-GNN)", desc: "SE(3) equivariant" },
+            { name: "SchNet / DimeNet", desc: "Molecular property prediction" },
+          ]},
+          { label: "Attention & Memory", leaves: [
+            { name: "Soft Attention (Bahdanau)", desc: "Alignment-based NMT attention" },
+            { name: "Hard Attention", desc: "Discrete non-differentiable" },
+            { name: "Self-Attention (Multi-Head)", desc: "Queries, keys, values" },
+            { name: "Cross-Attention", desc: "Attend across modalities" },
+            { name: "Linear Attention", desc: "O(n) approximation" },
+            { name: "Flash Attention v1/v2/v3", desc: "IO-aware efficient attention" },
+            { name: "Neural Turing Machine", desc: "Differentiable memory" },
+            { name: "Differentiable Neural Computer", desc: "External memory with control" },
+            { name: "Memory Augmented NN", desc: "External key-value store" },
+          ]},
+          { label: "Capsule Networks", leaves: [
+            { name: "Dynamic Routing Capsules", desc: "Iterative routing-by-agreement" },
+            { name: "EM Routing Capsules", desc: "EM-based routing" },
+            { name: "Efficient Capsule Nets", desc: "Attention-based capsules" },
+          ]},
+          { label: "Spiking Neural Networks (SNN)", leaves: [
+            { name: "Leaky Integrate-and-Fire (LIF)", desc: "Biological neuron model" },
+            { name: "STDP Learning", desc: "Spike-timing dependent plasticity" },
+            { name: "SpikingBERT", desc: "SNN transformer" },
+            { name: "SpikFormer", desc: "Spiking vision transformer" },
+          ]},
+          { label: "Mixture of Experts (MoE)", leaves: [
+            { name: "Sparse MoE (Switch Transformer)", desc: "Top-1 routing" },
+            { name: "GShard", desc: "Distributed MoE" },
+            { name: "Mixtral 8×7B / 8×22B", desc: "Open-source sparse MoE" },
+            { name: "Soft MoE", desc: "Continuous dispatch" },
+            { name: "Outrageously Large Neural Nets", desc: "Sparsely-gated MoE" },
+          ]},
+          { label: "Neural Architecture Search (NAS)", leaves: [
+            { name: "DARTS", desc: "Differentiable architecture search" },
+            { name: "ENAS", desc: "Efficient NAS with weight sharing" },
+            { name: "ProxylessNAS", desc: "Direct latency optimization" },
+            { name: "EfficientNet NAS", desc: "Compound coefficient search" },
+            { name: "Once-for-All (OFA)", desc: "Train once, deploy anywhere" },
+            { name: "AutoML-Zero", desc: "Evolve ML algorithms from scratch" },
+          ]},
+          { label: "Hypernetworks", leaves: [
+            { name: "Hypernetworks (Ha et al.)", desc: "Network generates another's weights" },
+            { name: "Meta-SGD / MAML Hypernetwork", desc: "Learned initialization" },
+            { name: "Fast Weight Programmers", desc: "Context-dependent weights" },
+          ]},
+        ]
+      },
+      {
+        label: "Training Techniques & Optimization", children: [
+          { label: "Optimization Algorithms", leaves: [
+            { name: "SGD (Stochastic Gradient Descent)", desc: "Mini-batch gradient updates" },
+            { name: "SGD + Momentum", desc: "Velocity accumulation" },
+            { name: "Nesterov Accelerated Gradient", desc: "Look-ahead gradient" },
+            { name: "AdaGrad", desc: "Adaptive per-param learning rate" },
+            { name: "AdaDelta", desc: "No global learning rate" },
+            { name: "RMSprop", desc: "Running average of gradient sq." },
+            { name: "Adam", desc: "1st + 2nd moment estimates" },
+            { name: "AdaMax", desc: "Adam with L∞ norm" },
+            { name: "NAdam", desc: "Nesterov Adam" },
+            { name: "AMSGrad", desc: "Non-decreasing 2nd moment" },
+            { name: "AdamW", desc: "Decoupled weight decay" },
+            { name: "Lookahead Optimizer", desc: "Slow + fast weights" },
+            { name: "Ranger (RAdam + Lookahead)", desc: "Rectified Adam + lookahead" },
+            { name: "LAMB", desc: "Layer-wise adaptive for large batch" },
+            { name: "LARS", desc: "Layer-wise adaptive rate scaling" },
+            { name: "Lion Optimizer", desc: "EvoLved Sign Gradient" },
+            { name: "Sophia", desc: "2nd-order curvature" },
+          ]},
+          { label: "Learning Rate Schedules", leaves: [
+            { name: "Step Decay", desc: "Reduce by factor every N epochs" },
+            { name: "Exponential Decay", desc: "Continuous exponential reduction" },
+            { name: "Cosine Annealing", desc: "Cosine cycle schedule" },
+            { name: "Cosine Annealing Warm Restarts", desc: "SGDR restart" },
+            { name: "Warmup + Cosine", desc: "Linear warmup then cosine" },
+            { name: "One Cycle Policy", desc: "Super-convergence schedule" },
+            { name: "ReduceLROnPlateau", desc: "Adaptive to validation loss" },
+            { name: "Cyclical Learning Rates", desc: "CLR: triangular/trapezoid" },
+            { name: "Polynomial Decay", desc: "Power-law reduction" },
+          ]},
+          { label: "Regularization", leaves: [
+            { name: "L1 / L2 Weight Decay", desc: "Penalize large weights" },
+            { name: "Dropout", desc: "Random unit deactivation" },
+            { name: "Inverted Dropout", desc: "Scale at train time" },
+            { name: "DropConnect", desc: "Random weight deactivation" },
+            { name: "Spatial Dropout", desc: "Drop entire feature maps" },
+            { name: "DropBlock", desc: "Structured spatial dropout" },
+            { name: "Stochastic Depth", desc: "Randomly drop layers" },
+            { name: "Batch Normalization (BN)", desc: "Normalize per mini-batch" },
+            { name: "Layer Normalization (LN)", desc: "Normalize per sample" },
+            { name: "Instance Normalization (IN)", desc: "Per channel, per sample" },
+            { name: "Group Normalization (GN)", desc: "Subset of channels" },
+            { name: "RMS Normalization", desc: "Root-mean-square normalization" },
+            { name: "Early Stopping", desc: "Stop at best validation" },
+            { name: "Label Smoothing", desc: "Soft target distribution" },
+            { name: "Mixup", desc: "Convex combination of samples" },
+            { name: "CutMix", desc: "Cut and paste patches" },
+            { name: "CutOut", desc: "Masking patches" },
+            { name: "AugMix", desc: "Augmentation consistency" },
+            { name: "Gradient Clipping", desc: "Cap gradient norm" },
+            { name: "Spectral Normalization", desc: "Lipschitz constraint on W" },
+          ]},
+          { label: "Activation Functions", leaves: [
+            { name: "Sigmoid", desc: "Squashes to (0,1)" },
+            { name: "Tanh", desc: "Squashes to (-1,1)" },
+            { name: "ReLU", desc: "Rectified linear unit" },
+            { name: "Leaky ReLU", desc: "Small slope for negatives" },
+            { name: "PReLU", desc: "Parametric negative slope" },
+            { name: "ELU", desc: "Exponential for negatives" },
+            { name: "SELU", desc: "Self-normalizing ELU" },
+            { name: "GELU", desc: "Gaussian CDF weighted" },
+            { name: "Swish / SiLU", desc: "x·sigmoid(x)" },
+            { name: "Mish", desc: "Smooth non-monotonic" },
+            { name: "Softmax", desc: "Multi-class probability" },
+            { name: "Softplus", desc: "Smooth ReLU" },
+            { name: "Maxout", desc: "Max over linear functions" },
+          ]},
+          { label: "Loss Functions", leaves: [
+            { name: "MSE / MAE / Huber", desc: "Regression losses" },
+            { name: "Binary Cross-Entropy", desc: "Binary classification" },
+            { name: "Categorical Cross-Entropy", desc: "Multi-class classification" },
+            { name: "Focal Loss", desc: "Imbalanced class weighting" },
+            { name: "Dice Loss", desc: "Segmentation overlap" },
+            { name: "IoU / Generalized IoU Loss", desc: "Object detection" },
+            { name: "Contrastive Loss", desc: "Similarity learning" },
+            { name: "Triplet Loss", desc: "Anchor-pos-neg margin" },
+            { name: "NT-Xent (SimCLR Loss)", desc: "Normalized temperature cross-entropy" },
+            { name: "KL Divergence", desc: "Distribution alignment" },
+            { name: "Wasserstein Loss", desc: "Earth mover's distance" },
+            { name: "Hinge Loss", desc: "SVM margin loss" },
+            { name: "CTC Loss", desc: "Sequence-to-sequence alignment" },
+            { name: "ELBO (VAE Loss)", desc: "Evidence lower bound" },
+            { name: "Perceptual Loss", desc: "Feature-level reconstruction" },
+            { name: "NLL Loss", desc: "Negative log-likelihood" },
+            { name: "PolyLoss", desc: "Polynomial expansion of CE" },
+          ]},
+        ]
+      },
+    ]
+  },
+  {
+    id: "reinforcement", label: "Reinforcement Learning", color: "#ff6b6b", tag: "Core",
+    desc: "Learning via interaction with environment through rewards",
+    children: [
+      {
+        label: "Model-Free RL", children: [
+          { label: "Value-Based Methods", leaves: [
+            { name: "Q-Learning", desc: "Off-policy Bellman updates" },
+            { name: "SARSA", desc: "On-policy TD(0)" },
+            { name: "Expected SARSA", desc: "Expected value target" },
+            { name: "Double Q-Learning", desc: "Decouples selection & evaluation" },
+            { name: "Deep Q-Network (DQN)", desc: "CNN + experience replay" },
+            { name: "Double DQN (DDQN)", desc: "Reduces overestimation" },
+            { name: "Dueling DQN", desc: "Value + advantage streams" },
+            { name: "Prioritized Experience Replay (PER)", desc: "Sample high-TD-error" },
+            { name: "Multi-step DQN (n-step)", desc: "n-step return targets" },
+            { name: "Distributional DQN (C51)", desc: "Categorical return distribution" },
+            { name: "QR-DQN", desc: "Quantile regression DQN" },
+            { name: "IQN", desc: "Implicit quantile networks" },
+            { name: "Rainbow DQN", desc: "All DQN improvements combined" },
+            { name: "Noisy DQN", desc: "Noisy linear layers exploration" },
+          ]},
+          { label: "Policy Gradient Methods", leaves: [
+            { name: "REINFORCE (Williams 1992)", desc: "Monte Carlo policy gradient" },
+            { name: "REINFORCE with Baseline", desc: "Variance reduction" },
+            { name: "Actor-Critic (A2C)", desc: "Synchronous advantage AC" },
+            { name: "Asynchronous A3C", desc: "Parallel async actors" },
+            { name: "Advantage Actor-Critic", desc: "Generalized advantage estimate" },
+            { name: "PPO (Proximal Policy Opt.)", desc: "Clipped objective" },
+            { name: "PPO-Epoch", desc: "Multiple epochs per rollout" },
+            { name: "TRPO", desc: "KL-constrained natural gradient" },
+            { name: "ACKTR", desc: "Kronecker-factored trust region" },
+            { name: "ACER", desc: "Off-policy actor-critic with retrace" },
+          ]},
+          { label: "Continuous Action Methods", leaves: [
+            { name: "DDPG", desc: "Deep deterministic policy gradient" },
+            { name: "TD3", desc: "Twin delayed deep deterministic" },
+            { name: "SAC (Soft Actor-Critic)", desc: "Max-entropy framework" },
+            { name: "SAC-Discrete", desc: "SAC for discrete actions" },
+            { name: "SVG (Stochastic Value Gradient)", desc: "Reparameterization PG" },
+            { name: "MPO (Max-a-Posteriori PO)", desc: "E-step / M-step policy update" },
+          ]},
+          { label: "Temporal Difference & Planning", leaves: [
+            { name: "TD(0) / TD(λ)", desc: "Temporal difference learning" },
+            { name: "Eligibility Traces", desc: "Credit assignment over time" },
+            { name: "Monte Carlo Methods", desc: "Full episode returns" },
+            { name: "MCTS (Monte Carlo Tree Search)", desc: "Lookahead tree planning" },
+          ]},
+        ]
+      },
+      {
+        label: "Model-Based RL", children: [
+          { label: "World Models", leaves: [
+            { name: "Dyna / Dyna-Q", desc: "Learn + plan with model" },
+            { name: "World Models (Ha & Schmidhuber)", desc: "VAE + MDN-RNN + C" },
+            { name: "Dreamer / DreamerV2 / DreamerV3", desc: "Latent dynamics planning" },
+            { name: "MBPO", desc: "Model-based policy optimization" },
+            { name: "PETS", desc: "Ensemble trajectory sampling" },
+            { name: "PILCO", desc: "Gaussian process dynamics" },
+            { name: "ME-TRPO", desc: "Model ensemble TRPO" },
+          ]},
+          { label: "Search & Planning", leaves: [
+            { name: "AlphaGo", desc: "MCTS + deep value/policy net" },
+            { name: "AlphaGo Zero", desc: "Self-play, no human data" },
+            { name: "AlphaZero", desc: "Generalized game algorithm" },
+            { name: "MuZero", desc: "Learns rules + plans" },
+            { name: "EfficientZero", desc: "Sample-efficient MuZero" },
+            { name: "Sampled MuZero", desc: "Continuous action spaces" },
+          ]},
+        ]
+      },
+      {
+        label: "Advanced RL Paradigms", children: [
+          { label: "Multi-Agent RL (MARL)", leaves: [
+            { name: "IQL (Independent Q-Learning)", desc: "Each agent independent" },
+            { name: "VDN", desc: "Value decomposition network" },
+            { name: "QMIX", desc: "Monotone mixing function" },
+            { name: "MADDPG", desc: "Multi-agent DDPG" },
+            { name: "MAPPO", desc: "Multi-agent PPO" },
+            { name: "COMA", desc: "Counterfactual multi-agent" },
+            { name: "QPLEX", desc: "Duplex dueling MA" },
+            { name: "HAPPO", desc: "Heterogeneous-agent PPO" },
+          ]},
+          { label: "Hierarchical RL", leaves: [
+            { name: "Options Framework", desc: "Sub-policies with initiation sets" },
+            { name: "MAXQ", desc: "Hierarchical value decomp" },
+            { name: "HAM", desc: "Hierarchical abstract machines" },
+            { name: "FeUdal Networks", desc: "Manager + worker agents" },
+            { name: "HIRO", desc: "Data-efficient hierarchical RL" },
+            { name: "Hierarchical MARL", desc: "Multi-agent hierarchy" },
+          ]},
+          { label: "Exploration Strategies", leaves: [
+            { name: "ε-Greedy", desc: "Random action with prob ε" },
+            { name: "Boltzmann / Softmax Exploration", desc: "Temperature-based" },
+            { name: "UCB (Upper Confidence Bound)", desc: "Optimism in face of uncertainty" },
+            { name: "Thompson Sampling", desc: "Bayesian posterior sampling" },
+            { name: "Intrinsic Motivation / Curiosity", desc: "Reward for novelty" },
+            { name: "ICM (Intrinsic Curiosity Module)", desc: "Prediction error as reward" },
+            { name: "RND (Random Network Distillation)", desc: "Fixed target novelty" },
+            { name: "Count-Based Exploration", desc: "Visit count bonus" },
+            { name: "NGU (Never Give Up)", desc: "Episodic + lifelong memory" },
+            { name: "Agent57", desc: "Superhuman Atari57 benchmark" },
+          ]},
+          { label: "Inverse RL (IRL) & Imitation", leaves: [
+            { name: "Maximum Entropy IRL", desc: "Recover reward from demos" },
+            { name: "GAIL", desc: "Generative adversarial imitation" },
+            { name: "AIRL", desc: "Adversarial IRL (disentangled)" },
+            { name: "Behavioral Cloning", desc: "Supervised on expert demos" },
+            { name: "DAgger", desc: "Dataset aggregation online" },
+            { name: "SQIL", desc: "Soft Q imitation learning" },
+          ]},
+          { label: "Offline / Batch RL", leaves: [
+            { name: "BCQ (Batch-Constrained Q-learning)", desc: "Policy close to behavior" },
+            { name: "CQL (Conservative Q-Learning)", desc: "Lower-bound Q values" },
+            { name: "TD3+BC", desc: "TD3 + behavioral cloning" },
+            { name: "IQL (Implicit Q-Learning)", desc: "No out-of-distribution queries" },
+            { name: "Decision Transformer", desc: "Offline RL as sequence modeling" },
+            { name: "Trajectory Transformer", desc: "Beam search planning" },
+            { name: "MOPO", desc: "Model-based offline PO" },
+          ]},
+          { label: "Meta-RL", leaves: [
+            { name: "MAML (Model-Agnostic Meta-Learning)", desc: "Fast task adaptation" },
+            { name: "SNAIL", desc: "Temporal conv + attention" },
+            { name: "RL²", desc: "RNN as learning algorithm" },
+            { name: "PEARL", desc: "Probabilistic task embeddings" },
+            { name: "ProMP", desc: "Proximal meta-policy search" },
+          ]},
+          { label: "Safe RL", leaves: [
+            { name: "Constrained MDP", desc: "Safety constraints in MDP" },
+            { name: "CPO (Constrained PO)", desc: "Trust region + constraints" },
+            { name: "PPO-Lagrangian", desc: "Lagrange penalty method" },
+            { name: "RCPO", desc: "Reward-constrained PO" },
+            { name: "Safety Layer", desc: "Action projection" },
+            { name: "Lyapunov-based RL", desc: "Stability guarantee" },
+          ]},
+        ]
+      },
+      {
+        label: "Bandits & Online Learning", leaves: [
+          { name: "Multi-Armed Bandit (MAB)", desc: "Exploration-exploitation tradeoff" },
+          { name: "ε-Greedy Bandit", desc: "Greedy with random explore" },
+          { name: "UCB1 / UCB2", desc: "Upper confidence bound" },
+          { name: "Thompson Sampling", desc: "Bayesian prior bandit" },
+          { name: "LinUCB / LinThompson", desc: "Contextual linear bandits" },
+          { name: "EXP3 / EXP3.P", desc: "Adversarial bandit" },
+          { name: "Bayesian Optimization (BO)", desc: "Gaussian process acquisition" },
+          { name: "Online Gradient Descent", desc: "Regret minimization" },
+          { name: "Follow the Regularized Leader", desc: "FTRL online learning" },
+        ]
+      },
+    ]
+  },
+  {
+    id: "semisupervised", label: "Semi-Supervised & Self-Supervised Learning", color: "#64c8ff", tag: "Paradigm",
+    desc: "Leveraging unlabeled data alongside limited labeled examples",
+    children: [
+      {
+        label: "Semi-Supervised Methods", leaves: [
+          { name: "Self-Training / Pseudo-Labeling", desc: "Iterate: train → label → retrain" },
+          { name: "Label Propagation", desc: "Graph-based diffusion" },
+          { name: "Label Spreading", desc: "Normalized graph Laplacian" },
+          { name: "Co-Training", desc: "Two views train each other" },
+          { name: "Mean Teacher", desc: "EMA of student weights" },
+          { name: "MixMatch", desc: "Sharpen + MixUp pseudo-labels" },
+          { name: "FixMatch", desc: "Confidence-thresholded pseudo-labels" },
+          { name: "FlexMatch", desc: "Dynamic threshold per class" },
+          { name: "FreeMatch", desc: "Self-adaptive threshold" },
+          { name: "SoftMatch", desc: "Soft uniform alignment" },
+          { name: "UDA (Unsupervised Data Augmentation)", desc: "Consistency regularization" },
+          { name: "VIME", desc: "Value imputation for tabular SSL" },
+          { name: "S4L", desc: "Self-supervised semi-supervised" },
+          { name: "TSVM (Transductive SVM)", desc: "Unlabeled point margin" },
+          { name: "Generative SSL (VAE+labels)", desc: "Latent class conditioning" },
+        ]
+      },
+      {
+        label: "Self-Supervised Learning", children: [
+          { label: "Contrastive Methods", leaves: [
+            { name: "SimCLR v1/v2", desc: "Augment → project → NT-Xent" },
+            { name: "MoCo v1/v2/v3", desc: "Momentum contrastive" },
+            { name: "BYOL", desc: "No negative pairs, EMA target" },
+            { name: "SimSiam", desc: "Stop-gradient, no negatives" },
+            { name: "VICReg", desc: "Variance-invariance-covariance" },
+            { name: "Barlow Twins", desc: "Cross-correlation matrix" },
+            { name: "SwAV", desc: "Clustering + prototype contrast" },
+            { name: "NNCLR", desc: "Nearest-neighbor contrastive" },
+            { name: "PCL (Prototypical CL)", desc: "Prototype-based contrastive" },
+          ]},
+          { label: "Masked / Predictive Methods", leaves: [
+            { name: "Masked Autoencoder (MAE)", desc: "Reconstruct masked patches (ViT)" },
+            { name: "BEiT", desc: "BERT-style image tokens" },
+            { name: "CAE", desc: "Context autoencoder" },
+            { name: "SparK", desc: "Sparse masked convolution" },
+            { name: "Masked Feature Prediction (MFP)", desc: "Predict teacher features" },
+            { name: "DINO / DINOv2", desc: "Knowledge distill self-supervised" },
+            { name: "iBOT", desc: "Image BERT online tokenizer" },
+            { name: "EsViT", desc: "Efficient self-supervised ViT" },
+            { name: "VideoMAE", desc: "Masked autoencoders for video" },
+            { name: "data2vec", desc: "Unified self-supervised framework" },
+          ]},
+          { label: "Pretext Tasks", leaves: [
+            { name: "Rotation Prediction", desc: "Predict image rotation angle" },
+            { name: "Jigsaw Puzzle", desc: "Predict patch permutation" },
+            { name: "Colorization", desc: "Predict color from grayscale" },
+            { name: "Inpainting", desc: "Reconstruct masked regions" },
+            { name: "Super Resolution", desc: "Predict high-res from low-res" },
+            { name: "Next Sentence Prediction (BERT)", desc: "Sentence continuation" },
+            { name: "Masked Language Modeling (MLM)", desc: "Predict masked tokens" },
+            { name: "Next Token Prediction (GPT)", desc: "Autoregressive LM" },
+            { name: "Contrastive Predictive Coding (CPC)", desc: "Predict future latents" },
+            { name: "SimCSE", desc: "Contrastive sentence embeddings" },
+          ]},
+        ]
+      },
+    ]
+  },
+  {
+    id: "transfer", label: "Transfer, Meta & Continual Learning", color: "#ff7eb3", tag: "Paradigm",
+    desc: "Reusing knowledge across tasks, domains, and over time",
+    children: [
+      {
+        label: "Transfer Learning", leaves: [
+          { name: "Feature Extraction", desc: "Freeze pretrained, train head" },
+          { name: "Fine-Tuning (Full)", desc: "Update all pretrained weights" },
+          { name: "Layer-wise Fine-Tuning", desc: "Gradually unfreeze layers" },
+          { name: "Adapter Modules", desc: "Small bottleneck layers inserted" },
+          { name: "Prompt Tuning", desc: "Learn soft prompts only" },
+          { name: "Prefix Tuning", desc: "Prepend trainable prefix tokens" },
+          { name: "LoRA (Low-Rank Adaptation)", desc: "Decompose weight updates" },
+          { name: "QLoRA", desc: "Quantized LoRA" },
+          { name: "DoRA", desc: "Weight-decomposed LoRA" },
+          { name: "IA³", desc: "Infused adapter by inhibiting and amplifying" },
+          { name: "BitFit", desc: "Fine-tune only bias terms" },
+          { name: "RLHF", desc: "RL from human feedback fine-tuning" },
+          { name: "DPO (Direct Preference Opt.)", desc: "No explicit reward model" },
+          { name: "ORPO", desc: "Odds ratio preference optimization" },
+          { name: "PPO-based RLHF", desc: "Policy gradient on reward model" },
+        ]
+      },
+      {
+        label: "Domain Adaptation", leaves: [
+          { name: "Domain Adversarial NN (DANN)", desc: "Gradient reversal layer" },
+          { name: "CORAL", desc: "Correlation alignment" },
+          { name: "Maximum Mean Discrepancy (MMD)", desc: "Distribution matching" },
+          { name: "ADDA", desc: "Adversarial discriminative DA" },
+          { name: "CycleGAN for DA", desc: "Unpaired image domain transfer" },
+          { name: "Self-Training DA", desc: "Pseudo-labels on target" },
+          { name: "SHOT", desc: "Source-free domain adaptation" },
+          { name: "Source-Free DA", desc: "No source data at adapt time" },
+          { name: "Test-Time Training (TTT)", desc: "Adapt at inference time" },
+        ]
+      },
+      {
+        label: "Meta-Learning", leaves: [
+          { name: "MAML", desc: "2nd-order fast adaptation" },
+          { name: "Reptile", desc: "1st-order MAML approximation" },
+          { name: "Meta-SGD", desc: "Learn per-param learning rate" },
+          { name: "Prototypical Networks", desc: "Class prototype distance" },
+          { name: "Matching Networks", desc: "Attention-based nearest neighbor" },
+          { name: "Relation Networks", desc: "Learned similarity module" },
+          { name: "Siamese Networks", desc: "Shared-weight twin encoders" },
+          { name: "Temporal Convolutions Meta (SNAIL)", desc: "Temporal context meta" },
+          { name: "Hypernetworks for Meta", desc: "Generate task-specific weights" },
+          { name: "MetaOptNet", desc: "SVM in embedding space" },
+        ]
+      },
+      {
+        label: "Few-Shot / Zero-Shot Learning", leaves: [
+          { name: "0-shot via LLM Prompting", desc: "Task description in context" },
+          { name: "1-shot / k-shot Prompting (ICL)", desc: "In-context examples" },
+          { name: "Zero-Shot Transfer (CLIP)", desc: "Vision-language alignment" },
+          { name: "Generalized Zero-Shot (GZSL)", desc: "Seen + unseen classes" },
+          { name: "Attribute-Based Zero-Shot", desc: "Semantic attribute vectors" },
+          { name: "Semantic Embedding Methods", desc: "Class description alignment" },
+          { name: "FSOD (Few-Shot Detection)", desc: "Detect novel object categories" },
+        ]
+      },
+      {
+        label: "Continual / Lifelong Learning", leaves: [
+          { name: "Elastic Weight Consolidation (EWC)", desc: "Penalize changing important weights" },
+          { name: "Progressive Neural Networks", desc: "Lateral connections to old nets" },
+          { name: "PackNet", desc: "Prune + retrain for tasks" },
+          { name: "GEM / A-GEM", desc: "Gradient episodic memory" },
+          { name: "Experience Replay (ER)", desc: "Store + replay old samples" },
+          { name: "DER / DER++", desc: "Dark experience replay" },
+          { name: "iCaRL", desc: "Exemplar + distillation class-IL" },
+          { name: "LwF (Learning without Forgetting)", desc: "Knowledge distillation" },
+          { name: "SI (Synaptic Intelligence)", desc: "Online EWC variant" },
+          { name: "CURL / Hyperparameter CL", desc: "Continual representation" },
+          { name: "L2P (Learning to Prompt)", desc: "Prompt-pool continual" },
+          { name: "DualPrompt", desc: "G-Prompt + E-Prompt" },
+        ]
+      },
+      {
+        label: "Multi-Task Learning", leaves: [
+          { name: "Hard Parameter Sharing", desc: "Shared backbone, task heads" },
+          { name: "Soft Parameter Sharing", desc: "Regularized parameter proximity" },
+          { name: "NDDR-CNN", desc: "Neural discriminative dimensionality" },
+          { name: "Cross-Stitch Networks", desc: "Learned feature sharing" },
+          { name: "Sluice Networks", desc: "Hierarchical sharing" },
+          { name: "PCGrad", desc: "Project conflicting gradients" },
+          { name: "GradNorm", desc: "Normalize task gradient magnitudes" },
+          { name: "MGDA (Multi-Gradient DA)", desc: "Pareto optimal solution" },
+          { name: "T5 / Flan-T5 (MTL LM)", desc: "Multi-task language models" },
+        ]
+      },
+    ]
+  },
+  {
+    id: "ensemble", label: "Ensemble Methods", color: "#a8ff78", tag: "Technique",
+    desc: "Combining multiple models for improved performance",
+    children: [
+      { label: "Bagging", leaves: [
+        { name: "Bootstrap Aggregating (Bagging)", desc: "Train on bootstrap samples" },
+        { name: "Random Forest", desc: "Bagged trees + feature sampling" },
+        { name: "Extra Trees (ET)", desc: "Completely random splits" },
+        { name: "Random Patches", desc: "Subsample features + samples" },
+        { name: "Balanced Random Forest", desc: "For imbalanced data" },
+      ]},
+      { label: "Boosting", leaves: [
+        { name: "AdaBoost", desc: "Adaptive sample reweighting" },
+        { name: "Gradient Boosting Machine (GBM)", desc: "Gradient descent in function space" },
+        { name: "Stochastic GBM", desc: "Subsample per tree" },
+        { name: "XGBoost", desc: "Regularized gradient boosting (Chen 2016)" },
+        { name: "LightGBM", desc: "Histogram GOSS + EFB" },
+        { name: "CatBoost", desc: "Ordered boosting, native categories" },
+        { name: "NGBoost", desc: "Natural gradient boosting" },
+        { name: "HistGradientBoostingClassifier", desc: "Sklearn native" },
+      ]},
+      { label: "Stacking & Blending", leaves: [
+        { name: "Stacking (Stacked Generalization)", desc: "Meta-learner on base predictions" },
+        { name: "Blending", desc: "Holdout set meta-training" },
+        { name: "Multi-level Stacking", desc: "Nested meta-learner layers" },
+        { name: "Feature-Weighted Linear Stacking", desc: "FWLS" },
+        { name: "DES (Dynamic Ensemble Selection)", desc: "Select best local ensemble" },
+      ]},
+      { label: "Voting & Averaging", leaves: [
+        { name: "Hard Voting", desc: "Majority class vote" },
+        { name: "Soft Voting", desc: "Average probability" },
+        { name: "Weighted Averaging", desc: "Performance-weighted" },
+        { name: "Snapshot Ensembles", desc: "Cosine annealing snapshots" },
+        { name: "Fast Geometric Ensembling (FGE)", desc: "Explore loss surface" },
+        { name: "Stochastic Weight Averaging (SWA)", desc: "Average along SGD trajectory" },
+        { name: "SWAG", desc: "SWA + Gaussian posterior" },
+      ]},
+      { label: "Specialized Ensembles", leaves: [
+        { name: "Random Subspace Method", desc: "Feature subset ensemble" },
+        { name: "Mixture of Experts (MoE)", desc: "Gated expert selection" },
+        { name: "Negative Correlation Learning", desc: "Encourage diversity" },
+        { name: "Cascaded Ensembles", desc: "Early exit for easy examples" },
+      ]},
+    ]
+  },
+  {
+    id: "probabilistic", label: "Probabilistic & Bayesian Methods", color: "#ff9500", tag: "Paradigm",
+    desc: "Reasoning under uncertainty with probability distributions",
+    children: [
+      { label: "Bayesian Inference", leaves: [
+        { name: "Bayesian Linear Regression", desc: "Prior + likelihood → posterior" },
+        { name: "Bayesian Logistic Regression", desc: "Laplace approximation" },
+        { name: "Gaussian Process (GP) Classification", desc: "GP prior over functions" },
+        { name: "Gaussian Process Regression (GPR)", desc: "Non-parametric Bayesian" },
+        { name: "Dirichlet Process Mixture", desc: "Non-parametric clustering" },
+        { name: "Beta-Bernoulli Bandit", desc: "Bayesian A/B testing" },
+        { name: "Bayesian Neural Networks (BNN)", desc: "Weight distributions" },
+        { name: "Variational Inference (VI)", desc: "Approximate posterior q(θ)" },
+        { name: "Expectation Propagation (EP)", desc: "Approximate message passing" },
+        { name: "Laplace Approximation", desc: "Gaussian around MAP" },
+      ]},
+      { label: "Markov Models", leaves: [
+        { name: "Markov Chain", desc: "Memoryless state transitions" },
+        { name: "Hidden Markov Model (HMM)", desc: "Latent state sequence" },
+        { name: "Markov Decision Process (MDP)", desc: "RL formal framework" },
+        { name: "Partially Observable MDP (POMDP)", desc: "Hidden state MDP" },
+        { name: "Semi-Markov Process", desc: "Sojourn-time dependent" },
+        { name: "Markov Random Field (MRF)", desc: "Undirected graphical model" },
+        { name: "Conditional Random Field (CRF)", desc: "Discriminative MRF" },
+      ]},
+      { label: "Graphical Models", leaves: [
+        { name: "Bayesian Network (DAG)", desc: "Directed probabilistic graph" },
+        { name: "Dynamic Bayesian Network (DBN)", desc: "Time-series Bayesian nets" },
+        { name: "Factor Graph", desc: "Factored joint distribution" },
+        { name: "Belief Propagation (BP)", desc: "Sum-product message passing" },
+        { name: "Loopy Belief Propagation", desc: "BP on graphs with cycles" },
+        { name: "Junction Tree Algorithm", desc: "Exact inference via tree" },
+        { name: "Variational EM", desc: "E-step variational approx." },
+      ]},
+      { label: "MCMC Sampling", leaves: [
+        { name: "Metropolis-Hastings", desc: "Accept-reject proposal" },
+        { name: "Gibbs Sampling", desc: "Coordinate-wise conditional" },
+        { name: "Hamiltonian Monte Carlo (HMC)", desc: "Gradient-guided proposals" },
+        { name: "NUTS (No-U-Turn Sampler)", desc: "Adaptive HMC (Stan)" },
+        { name: "Langevin Dynamics (SGLD)", desc: "Stochastic gradient MCMC" },
+        { name: "Sequential Monte Carlo (SMC)", desc: "Particle filter" },
+        { name: "Annealed Importance Sampling", desc: "Bridge distributions" },
+      ]},
+      { label: "Calibration & Uncertainty", leaves: [
+        { name: "Platt Scaling", desc: "Sigmoid calibration of SVM" },
+        { name: "Isotonic Regression Calibration", desc: "Non-parametric calibration" },
+        { name: "Temperature Scaling", desc: "Single temperature logits" },
+        { name: "Deep Ensembles", desc: "Uncertainty from ensemble spread" },
+        { name: "MC Dropout", desc: "Dropout at inference for uncertainty" },
+        { name: "Concrete Dropout", desc: "Learnable dropout rate" },
+        { name: "Conformal Prediction", desc: "Coverage-guaranteed intervals" },
+        { name: "Venn Prediction", desc: "Multi-class conformal" },
+      ]},
+    ]
+  },
+  {
+    id: "fundamentals", label: "ML Foundations & Pipeline", color: "#ffd700", tag: "Foundations",
+    desc: "Core concepts, data engineering, evaluation, and best practices",
+    children: [
+      {
+        label: "Data Preprocessing", leaves: [
+          { name: "Min-Max Normalization", desc: "Scale to [0,1]" },
+          { name: "Z-Score Standardization", desc: "Zero mean, unit variance" },
+          { name: "Robust Scaling (IQR)", desc: "Median + IQR robust" },
+          { name: "Log / Box-Cox Transform", desc: "Normalize skewed distributions" },
+          { name: "Yeo-Johnson Transform", desc: "Handles negative values" },
+          { name: "One-Hot Encoding", desc: "Categorical → binary vectors" },
+          { name: "Ordinal Encoding", desc: "Category → integer rank" },
+          { name: "Target / Mean Encoding", desc: "Replace cat with target mean" },
+          { name: "Frequency Encoding", desc: "Replace cat with frequency" },
+          { name: "Binary Encoding", desc: "Ordinal → binary digits" },
+          { name: "Hashing Encoding", desc: "Hash trick for high-card cat" },
+          { name: "Imputation (Mean/Median/Mode)", desc: "Simple missing value fill" },
+          { name: "KNN Imputation", desc: "Neighbor-based missing fill" },
+          { name: "MICE / IterativeImputer", desc: "Multiple imputation" },
+          { name: "MissForest", desc: "Random forest imputation" },
+          { name: "Data Augmentation (CV)", desc: "Flip, rotate, crop, color jitter" },
+          { name: "Text Augmentation (NLP)", desc: "Synonym swap, back-translation" },
+          { name: "SMOTE", desc: "Synthetic minority oversampling" },
+          { name: "ADASYN", desc: "Adaptive synthetic sampling" },
+        ]
+      },
+      {
+        label: "Feature Engineering", leaves: [
+          { name: "Polynomial Features", desc: "Interaction + power features" },
+          { name: "Binning / Discretization", desc: "Continuous → bins" },
+          { name: "Feature Crossing", desc: "Combine feature pairs" },
+          { name: "TF-IDF", desc: "Text term importance weighting" },
+          { name: "Word Embeddings (Word2Vec, GloVe, FastText)", desc: "Dense word vectors" },
+          { name: "Sentence Embeddings (SBERT)", desc: "Semantic sentence repr." },
+          { name: "Fourier / Wavelet Features", desc: "Frequency domain features" },
+          { name: "Lag Features (Time Series)", desc: "Autoregressive lags" },
+          { name: "Rolling Window Statistics", desc: "Rolling mean/std/etc" },
+          { name: "Date-Time Feature Extraction", desc: "Hour, weekday, seasonality" },
+          { name: "Entity Embeddings", desc: "Neural categorical embeddings" },
+          { name: "Graph Features (node2vec)", desc: "Graph structural embeddings" },
+        ]
+      },
+      {
+        label: "Evaluation Metrics", children: [
+          { label: "Classification Metrics", leaves: [
+            { name: "Accuracy", desc: "Fraction correctly classified" },
+            { name: "Precision", desc: "TP / (TP+FP)" },
+            { name: "Recall / Sensitivity", desc: "TP / (TP+FN)" },
+            { name: "F1 Score", desc: "Harmonic mean precision/recall" },
+            { name: "F-beta Score", desc: "Weighted F1" },
+            { name: "ROC-AUC", desc: "Area under ROC curve" },
+            { name: "PR-AUC", desc: "Area under precision-recall" },
+            { name: "Matthews Correlation Coeff.", desc: "Balanced binary metric" },
+            { name: "Cohen's Kappa", desc: "Agreement beyond chance" },
+            { name: "Log Loss / Cross-Entropy", desc: "Probabilistic loss" },
+            { name: "Confusion Matrix", desc: "TP/TN/FP/FN breakdown" },
+            { name: "Specificity / NPV", desc: "True negative rate" },
+          ]},
+          { label: "Regression Metrics", leaves: [
+            { name: "MSE (Mean Squared Error)", desc: "Average squared residuals" },
+            { name: "RMSE", desc: "Root MSE" },
+            { name: "MAE (Mean Absolute Error)", desc: "Average absolute residuals" },
+            { name: "MAPE", desc: "Mean absolute percentage error" },
+            { name: "SMAPE", desc: "Symmetric MAPE" },
+            { name: "R² (Coefficient of Determination)", desc: "Variance explained" },
+            { name: "Adjusted R²", desc: "Penalizes extra features" },
+            { name: "Huber Loss Metric", desc: "Robust to outliers" },
+            { name: "Pinball Loss", desc: "Quantile evaluation" },
+          ]},
+          { label: "Ranking & Retrieval Metrics", leaves: [
+            { name: "Mean Average Precision (MAP)", desc: "IR precision averaged" },
+            { name: "NDCG", desc: "Normalized discounted gain" },
+            { name: "MRR (Mean Reciprocal Rank)", desc: "Reciprocal first-hit rank" },
+            { name: "Hit Rate @ K", desc: "Fraction with hit in top-K" },
+            { name: "Precision @ K / Recall @ K", desc: "Top-K cutoff metrics" },
+          ]},
+          { label: "NLP / Generation Metrics", leaves: [
+            { name: "BLEU", desc: "N-gram precision (MT)" },
+            { name: "ROUGE (1/2/L)", desc: "N-gram recall (summarization)" },
+            { name: "METEOR", desc: "Alignment-based MT metric" },
+            { name: "CIDEr", desc: "Consensus-based image captioning" },
+            { name: "BERTScore", desc: "Contextual embedding similarity" },
+            { name: "MoverScore", desc: "Word mover distance eval" },
+            { name: "Perplexity", desc: "Language model evaluation" },
+          ]},
+          { label: "Clustering Metrics", leaves: [
+            { name: "Silhouette Score", desc: "Cohesion vs separation" },
+            { name: "Davies-Bouldin Index", desc: "Ratio of scatter/separation" },
+            { name: "Calinski-Harabasz Index", desc: "Variance ratio criterion" },
+            { name: "ARI (Adjusted Rand Index)", desc: "Pairwise agreement, chance-corrected" },
+            { name: "NMI (Normalized Mutual Info)", desc: "Shared information score" },
+            { name: "V-Measure", desc: "Homogeneity + completeness" },
+            { name: "Fowlkes-Mallows Index", desc: "Geometric mean P/R pairs" },
+          ]},
+        ]
+      },
+      {
+        label: "Model Selection & Validation", leaves: [
+          { name: "Train/Val/Test Split", desc: "Holdout evaluation sets" },
+          { name: "K-Fold Cross-Validation", desc: "Stratified k-fold split" },
+          { name: "Leave-One-Out (LOOCV)", desc: "n-fold CV" },
+          { name: "Repeated K-Fold", desc: "Multiple random repeats" },
+          { name: "Time-Series Split (Walk-Forward)", desc: "Respect temporal order" },
+          { name: "Nested Cross-Validation", desc: "Hyperparameter selection inside" },
+          { name: "Stratified K-Fold", desc: "Preserve class balance" },
+          { name: "Bias-Variance Tradeoff", desc: "Underfitting vs overfitting" },
+          { name: "Learning Curves", desc: "Error vs training set size" },
+          { name: "Validation Curves", desc: "Error vs hyperparameter" },
+        ]
+      },
+      {
+        label: "Hyperparameter Optimization", leaves: [
+          { name: "Grid Search", desc: "Exhaustive discrete search" },
+          { name: "Random Search", desc: "Random sample in space" },
+          { name: "Bayesian Optimization (Optuna, Hyperopt)", desc: "TPE / GP surrogate" },
+          { name: "Hyperband", desc: "Early stopping bandit" },
+          { name: "BOHB", desc: "Bayesian + Hyperband" },
+          { name: "Successive Halving (SHA)", desc: "Resource budget brackets" },
+          { name: "Population-Based Training (PBT)", desc: "Evolutionary HPO" },
+          { name: "Neural Architecture Search (NAS)", desc: "Automated model design" },
+          { name: "AutoML (Auto-sklearn, H2O)", desc: "Pipeline automation" },
+          { name: "FLAML", desc: "Fast low-cost AutoML" },
+        ]
+      },
+      {
+        label: "Interpretability & Explainability (XAI)", leaves: [
+          { name: "SHAP (SHapley Additive Explanations)", desc: "Feature attribution via game theory" },
+          { name: "LIME", desc: "Local interpretable surrogate" },
+          { name: "Integrated Gradients", desc: "Path-based attribution (DL)" },
+          { name: "Grad-CAM / Grad-CAM++", desc: "CNN visual attribution" },
+          { name: "Saliency Maps", desc: "Gradient w.r.t. input" },
+          { name: "TCAV", desc: "Concept-based explanations" },
+          { name: "Permutation Importance", desc: "Shuffle feature, measure drop" },
+          { name: "Partial Dependence Plot (PDP)", desc: "Marginal effect of feature" },
+          { name: "ICE Plots", desc: "Individual conditional expectation" },
+          { name: "Counterfactual Explanations", desc: "Minimal change to flip prediction" },
+          { name: "Prototype / Criticism", desc: "Representative + outlier samples" },
+          { name: "Attention Visualization", desc: "Transformer attention rollout" },
+          { name: "Mechanistic Interpretability", desc: "Circuit-level LLM analysis" },
+        ]
+      },
+      {
+        label: "Fairness, Robustness & Safety", leaves: [
+          { name: "Demographic Parity", desc: "Equal positive rate across groups" },
+          { name: "Equalized Odds", desc: "Equal TPR + FPR across groups" },
+          { name: "Calibration Fairness", desc: "Calibrated across groups" },
+          { name: "Counterfactual Fairness", desc: "Same prediction if group changed" },
+          { name: "Adversarial Debiasing", desc: "Remove sensitive info" },
+          { name: "Adversarial Robustness (FGSM, PGD)", desc: "Attack-resistant training" },
+          { name: "Certified Robustness (Randomized Smoothing)", desc: "Provable guarantees" },
+          { name: "Data Poisoning Defense", desc: "Certified data sanitization" },
+          { name: "Model Extraction Defense", desc: "Watermarking, rate limiting" },
+          { name: "Privacy (Differential Privacy)", desc: "ε-δ privacy guarantees" },
+          { name: "Federated Learning", desc: "Decentralized private training" },
+          { name: "Secure Multi-Party Computation", desc: "Encrypted model training" },
+          { name: "Homomorphic Encryption (HE)", desc: "Compute on encrypted data" },
+        ]
+      },
+      {
+        label: "MLOps & Deployment", leaves: [
+          { name: "Model Versioning (MLflow, DVC)", desc: "Track experiments + artifacts" },
+          { name: "Feature Stores (Feast, Tecton)", desc: "Centralized feature serving" },
+          { name: "Data Versioning (DVC)", desc: "Git for datasets" },
+          { name: "Model Serving (TorchServe, Triton)", desc: "Production inference" },
+          { name: "ONNX Export", desc: "Cross-framework model format" },
+          { name: "TensorRT / TFLite", desc: "Edge/GPU optimized inference" },
+          { name: "Quantization (PTQ, QAT)", desc: "INT8/FP16 model compression" },
+          { name: "Pruning (Structured / Unstructured)", desc: "Remove low-magnitude weights" },
+          { name: "Knowledge Distillation", desc: "Student learns from teacher logits" },
+          { name: "A/B Testing", desc: "Compare model versions in prod" },
+          { name: "Shadow Deployment", desc: "Run new model in parallel" },
+          { name: "Canary Deployment", desc: "Gradual traffic shift" },
+          { name: "Model Monitoring (Evidently, WhyLabs)", desc: "Drift + data quality alerts" },
+          { name: "Data Drift Detection", desc: "KS test, PSI, MMD" },
+          { name: "Concept Drift Detection", desc: "ADWIN, DDM, EDDM" },
+          { name: "CI/CD for ML (GitHub Actions, Kubeflow)", desc: "Automated ML pipelines" },
+        ]
+      },
+    ]
+  },
+  {
+    id: "specialized", label: "Specialized ML Domains", color: "#d0a0ff", tag: "Applied",
+    desc: "Applications of ML across major domains",
+    children: [
+      {
+        label: "Computer Vision (CV)", leaves: [
+          { name: "Image Classification", desc: "Assign class label to image" },
+          { name: "Object Detection (YOLO v1–v9)", desc: "Localize + classify objects" },
+          { name: "Object Detection (Faster R-CNN, Mask R-CNN)", desc: "Region proposal networks" },
+          { name: "Object Detection (DETR, RT-DETR)", desc: "Transformer detection" },
+          { name: "Semantic Segmentation (FCN, UNet, DeepLab)", desc: "Pixel-level classification" },
+          { name: "Instance Segmentation (Mask R-CNN, SOLOv2)", desc: "Per-instance masks" },
+          { name: "Panoptic Segmentation", desc: "Semantic + instance combined" },
+          { name: "Pose Estimation (OpenPose, HRNet)", desc: "Human keypoint detection" },
+          { name: "Depth Estimation (MonoDepth2)", desc: "Per-pixel depth prediction" },
+          { name: "Optical Flow (FlowNet, RAFT)", desc: "Pixel motion estimation" },
+          { name: "Video Understanding (SlowFast, TimeSformer)", desc: "Action recognition" },
+          { name: "3D Point Cloud (PointNet, PointNet++)", desc: "3D scene understanding" },
+          { name: "NeRF", desc: "Neural radiance field 3D synthesis" },
+          { name: "3D Gaussian Splatting", desc: "Real-time 3D scene rendering" },
+          { name: "Face Recognition (ArcFace, CosFace)", desc: "Identity verification" },
+          { name: "Medical Imaging (chest X-ray, MRI seg.)", desc: "Clinical AI" },
+          { name: "OCR (Tesseract, PaddleOCR, TrOCR)", desc: "Text recognition" },
+          { name: "Document Understanding (LayoutLM)", desc: "Structured doc parsing" },
+          { name: "Anomaly Detection in Images", desc: "Industrial defect detection" },
+        ]
+      },
+      {
+        label: "Natural Language Processing (NLP)", leaves: [
+          { name: "Tokenization (BPE, WordPiece, SentencePiece)", desc: "Subword segmentation" },
+          { name: "Text Classification (Sentiment, Topic)", desc: "Document labeling" },
+          { name: "Named Entity Recognition (NER)", desc: "Token-level entity tagging" },
+          { name: "Part-of-Speech Tagging (POS)", desc: "Grammatical role labeling" },
+          { name: "Dependency Parsing", desc: "Syntactic tree prediction" },
+          { name: "Coreference Resolution", desc: "Pronoun entity linking" },
+          { name: "Relation Extraction", desc: "Entity relation prediction" },
+          { name: "Event Extraction", desc: "Structured event detection" },
+          { name: "Machine Translation (seq2seq, Transformer)", desc: "Cross-lingual translation" },
+          { name: "Question Answering (extractive / generative)", desc: "Reading comprehension" },
+          { name: "Open-Domain QA (RAG)", desc: "Retrieval augmented generation" },
+          { name: "Text Summarization (abstractive/extractive)", desc: "Condensed output" },
+          { name: "Natural Language Inference (NLI)", desc: "Entailment/contradiction" },
+          { name: "Semantic Textual Similarity (STS)", desc: "Sentence embedding cosine" },
+          { name: "Text Generation / LLM Inference", desc: "Sampling, beam search" },
+          { name: "Dialogue Systems / Chatbots", desc: "Multi-turn conversation" },
+          { name: "Information Retrieval (BM25, dense retrieval)", desc: "Document ranking" },
+          { name: "Knowledge Graph Completion", desc: "Link prediction in KG" },
+          { name: "Code Generation (Codex, StarCoder, DeepSeek-Coder)", desc: "LLM → code" },
+          { name: "Math Reasoning (Chain-of-Thought)", desc: "Stepwise reasoning" },
+        ]
+      },
+      {
+        label: "Speech & Audio", leaves: [
+          { name: "Automatic Speech Recognition (ASR)", desc: "Speech → text (Whisper, wav2vec2)" },
+          { name: "Text-to-Speech (TTS) (Tacotron, FastSpeech)", desc: "Text → audio" },
+          { name: "Voice Conversion", desc: "Change speaker identity" },
+          { name: "Speaker Diarization", desc: "Who spoke when" },
+          { name: "Speaker Verification / Identification", desc: "Voice biometrics" },
+          { name: "Speech Enhancement / Denoising", desc: "Noise reduction" },
+          { name: "Music Generation (MusicLM, AudioCraft)", desc: "Generative audio models" },
+          { name: "Sound Classification / Event Detection", desc: "Environmental audio" },
+          { name: "Audio Segmentation", desc: "Source separation (Demucs)" },
+          { name: "Spoken Language Understanding (SLU)", desc: "Intent from speech" },
+        ]
+      },
+      {
+        label: "Tabular / Structured Data", leaves: [
+          { name: "Gradient Boosted Trees (best for tabular)", desc: "XGBoost/LightGBM dominate" },
+          { name: "TabNet", desc: "Attentive sequential tabular NN" },
+          { name: "NODE (Neural Oblivious Decision Ens.)", desc: "Differentiable oblivious trees" },
+          { name: "TabTransformer", desc: "Transformer for tabular" },
+          { name: "FT-Transformer (Feature Tokenizer)", desc: "Embedding + transformer" },
+          { name: "SAINT", desc: "Self-attention inter-sample" },
+          { name: "AutoInt", desc: "Feature interaction attention" },
+          { name: "Wide & Deep (Google)", desc: "Memorization + generalization" },
+          { name: "DeepFM", desc: "Factorization machine + DNN" },
+          { name: "DNNFM / xDeepFM", desc: "Compressed interaction network" },
+        ]
+      },
+      {
+        label: "Recommender Systems", leaves: [
+          { name: "Collaborative Filtering (CF)", desc: "User/item interaction matrix" },
+          { name: "Matrix Factorization (SVD, ALS)", desc: "Latent factor model" },
+          { name: "Neural CF (NCF)", desc: "Deep learning CF" },
+          { name: "Content-Based Filtering", desc: "Feature similarity" },
+          { name: "Hybrid Systems", desc: "CF + content-based" },
+          { name: "Two-Tower Model", desc: "Separate user/item encoders" },
+          { name: "DSSM", desc: "Deep semantic hashing" },
+          { name: "Transformer4Rec", desc: "Session-based recommender" },
+          { name: "SASRec / BERT4Rec", desc: "Self-attentive sequential rec." },
+          { name: "LightGCN", desc: "Graph CF lightweight" },
+          { name: "Graph-based Rec. (PinSage)", desc: "Pinterest graph CF" },
+          { name: "Bandit-based Rec. (LinUCB)", desc: "Online exploration rec." },
+          { name: "Bayesian Personalized Ranking (BPR)", desc: "Pairwise implicit feedback" },
+          { name: "VAE-CF", desc: "Variational autoencoder CF" },
+          { name: "Diffusion-based Rec.", desc: "DiffRec, LDiffRec" },
+        ]
+      },
+      {
+        label: "Graph / Network ML", leaves: [
+          { name: "Node Classification", desc: "Label nodes in graph" },
+          { name: "Link Prediction", desc: "Predict missing edges" },
+          { name: "Graph Classification", desc: "Label whole graphs" },
+          { name: "Community Detection", desc: "Cluster graph nodes" },
+          { name: "Knowledge Graph Embeddings (TransE, RotatE)", desc: "KG entity/relation emb" },
+          { name: "Heterogeneous Graph ML (HAN, HGT)", desc: "Multi-type nodes/edges" },
+          { name: "Temporal GNN (TGAT, TGN)", desc: "Time-evolving graphs" },
+          { name: "Graph Generation (GraphRNN, GRAN)", desc: "Generate new graphs" },
+          { name: "Graph Diffusion (GDSS, DiGress)", desc: "Diffusion on graphs" },
+          { name: "Molecule Property Prediction", desc: "QSAR, toxicity, activity" },
+          { name: "Protein Structure (AlphaFold 2/3)", desc: "3D structure from sequence" },
+          { name: "Drug-Target Interaction (DTI)", desc: "Binding affinity prediction" },
+        ]
+      },
+      {
+        label: "Multimodal ML", leaves: [
+          { name: "Vision-Language (CLIP, ALIGN)", desc: "Cross-modal contrastive" },
+          { name: "Visual Question Answering (VQA)", desc: "Image + question → answer" },
+          { name: "Image Captioning (GIT, BLIP-2)", desc: "Generate text for image" },
+          { name: "Visual Grounding (GLIP)", desc: "Phrase → image region" },
+          { name: "Text-to-Image Generation", desc: "Stable Diffusion, DALL-E, etc." },
+          { name: "Image-to-Text (OCR, captioning)", desc: "Image → natural language" },
+          { name: "Audio-Visual Learning", desc: "Sound + visual correspondences" },
+          { name: "Video-Language (CLIP4Clip, VideoCLIP)", desc: "Video-text retrieval" },
+          { name: "Multimodal LLMs (GPT-4V, Gemini)", desc: "Text + image + audio LLMs" },
+          { name: "Embodied AI (robotics + LLM)", desc: "Language-conditioned robots" },
+          { name: "Text-to-3D / Text-to-Video", desc: "Sora, Gen-3, Emu Video" },
+        ]
+      },
+      {
+        label: "Scientific ML", leaves: [
+          { name: "Physics-Informed Neural Nets (PINN)", desc: "PDE constraints in loss" },
+          { name: "Neural Operators (FNO, DeepONet)", desc: "Learn operators between spaces" },
+          { name: "Equivariant Networks (SE(3)-DNN)", desc: "Symmetry-preserving" },
+          { name: "Graph Networks for Simulation (GNS)", desc: "Particle mesh simulation" },
+          { name: "Neural ODE / SDE", desc: "Continuous-depth networks" },
+          { name: "Latent ODEs", desc: "Irregular time-series ODEs" },
+          { name: "Differentiable Programming", desc: "End-to-end scientific pipelines" },
+          { name: "Genomics / Bioinformatics ML", desc: "DNA, RNA, protein ML" },
+          { name: "ChemBERTa / MolBERT", desc: "Molecular language models" },
+          { name: "Climate / Weather ML (Pangu, GraphCast)", desc: "Atmospheric forecasting" },
+          { name: "Materials Discovery (GFlowNet)", desc: "Generative material design" },
+        ]
+      },
+    ]
+  },
+];
+
+const COLORS = {
+  "supervised": "#7c6aff",
+  "unsupervised": "#00d4a8",
+  "deeplearning": "#ffb347",
+  "reinforcement": "#ff6b6b",
+  "semisupervised": "#64c8ff",
+  "transfer": "#ff7eb3",
+  "ensemble": "#a8ff78",
+  "probabilistic": "#ff9500",
+  "fundamentals": "#ffd700",
+  "specialized": "#d0a0ff",
+};
+
+let totalLeaves = 0;
+
+function countLeaves(node) {
+  if (node.leaves) return node.leaves.length;
+  if (node.children) return node.children.reduce((s, c) => s + countLeaves(c), 0);
+  return 0;
+}
+
+function buildLeafList(leaves, color) {
+  const div = document.createElement('div');
+  div.className = 'leaf-list';
+  for (const leaf of leaves) {
+    const el = document.createElement('div');
+    el.className = 'leaf';
+    el.style.borderLeftColor = color + '55';
+    el.style.borderLeftWidth = '3px';
+    el.innerHTML = `<div class="leaf-name">${leaf.name}</div>${leaf.desc ? `<div class="leaf-desc">${leaf.desc}</div>` : ''}`;
+    div.appendChild(el);
+  }
+  return div;
+}
+
+function buildNode(node, color, depth) {
+  const count = countLeaves(node);
+  totalLeaves += (depth === 0) ? 0 : 0; // counted at top
+
+  const wrapper = document.createElement('div');
+  wrapper.className = `node depth-${depth}`;
+  wrapper.style.color = color;
+
+  const header = document.createElement('div');
+  header.className = 'node-header';
+  header.style.borderLeftColor = color + 'aa';
+
+  const toggle = document.createElement('span');
+  toggle.className = 'toggle-icon';
+  toggle.textContent = '▶';
+
+  const label = document.createElement('span');
+  label.className = 'node-label';
+  label.style.color = depth === 0 ? color : (depth === 1 ? '#ddd' : '#bbb');
+  label.innerHTML = node.label;
+
+  const badge = document.createElement('span');
+  badge.style.cssText = `font-size:10px;color:${color}80;font-family:'JetBrains Mono',monospace;`;
+  badge.textContent = `${count} items`;
+
+  header.appendChild(toggle);
+  header.appendChild(label);
+  header.appendChild(badge);
+  wrapper.appendChild(header);
+
+  const children = document.createElement('div');
+  children.className = 'node-children';
+
+  if (node.leaves) {
+    children.appendChild(buildLeafList(node.leaves, color));
+  }
+  if (node.children) {
+    for (const child of node.children) {
+      children.appendChild(buildNode(child, color, depth + 1));
+    }
+  }
+
+  wrapper.appendChild(children);
+  header.addEventListener('click', () => {
+    wrapper.classList.toggle('open');
+  });
+
+  return wrapper;
+}
+
+function buildTree() {
+  const tree = document.getElementById('tree');
+  const legend = document.getElementById('legend');
+  let total = 0;
+
+  for (const section of TAXONOMY) {
+    const color = section.color;
+    const count = section.children.reduce((s, c) => s + countLeaves(c), 0);
+    total += count;
+
+    // Legend item
+    const li = document.createElement('div');
+    li.className = 'legend-item';
+    li.innerHTML = `<div class="legend-dot" style="background:${color}"></div>${section.label}`;
+    li.addEventListener('click', () => {
+      const el = document.getElementById('section-' + section.id);
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (!el.classList.contains('open')) el.classList.add('open');
+    });
+    legend.appendChild(li);
+
+    // Section
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.id = 'section-' + section.id;
+    sec.style.borderColor = color + '40';
+
+    const sh = document.createElement('div');
+    sh.className = 'section-header';
+    sh.style.background = `linear-gradient(135deg, ${color}18, transparent)`;
+    sh.innerHTML = `
+      <div style="width:14px;height:14px;border-radius:50%;background:${color};flex-shrink:0;box-shadow:0 0 12px ${color}80"></div>
+      <span style="color:${color}">${section.label}</span>
+      <span class="count-badge">${count} algorithms</span>
+      <span style="color:${color}70;font-family:'JetBrains Mono',monospace;font-size:11px;margin-left:4px;flex:1">${section.desc || ''}</span>
+      <span class="section-toggle">▼</span>
+    `;
+
+    const sb = document.createElement('div');
+    sb.className = 'section-body';
+
+    for (const child of section.children) {
+      sb.appendChild(buildNode(child, color, 1));
+    }
+
+    sh.addEventListener('click', () => sec.classList.toggle('open'));
+    sec.appendChild(sh);
+    sec.appendChild(sb);
+    tree.appendChild(sec);
+  }
+
+  document.getElementById('stats').textContent =
+    `${TAXONOMY.length} paradigms · ~${total}+ algorithms, techniques & concepts`;
+}
+
+function expandAll() {
+  document.querySelectorAll('.section, .node').forEach(el => el.classList.add('open'));
+}
+
+function collapseAll() {
+  document.querySelectorAll('.section, .node').forEach(el => el.classList.remove('open'));
+}
+
+function expandTopLevel() {
+  document.querySelectorAll('.section').forEach(el => el.classList.add('open'));
+  document.querySelectorAll('.node').forEach(el => el.classList.remove('open'));
+}
+
+// Search
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  if (!q) {
+    document.querySelectorAll('.leaf, .node, .section').forEach(el => {
+      el.classList.remove('hidden');
+      el.querySelectorAll('.hl').forEach(h => {
+        h.outerHTML = h.textContent;
+      });
+    });
+    return;
+  }
+
+  document.querySelectorAll('.section').forEach(sec => sec.classList.add('open'));
+  document.querySelectorAll('.node').forEach(node => {
+    node.classList.add('open');
+    node.classList.remove('hidden');
+  });
+
+  document.querySelectorAll('.leaf').forEach(leaf => {
+    const text = leaf.textContent.toLowerCase();
+    if (text.includes(q)) {
+      leaf.classList.remove('hidden');
+      leaf.querySelectorAll('.hl').forEach(h => h.outerHTML = h.textContent);
+      ['leaf-name', 'leaf-desc'].forEach(cls => {
+        const el = leaf.querySelector('.' + cls);
+        if (el) {
+          const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+          el.innerHTML = el.textContent.replace(regex, '<span class="hl">$1</span>');
+        }
+      });
+    } else {
+      leaf.classList.add('hidden');
+    }
+  });
+});
+
+buildTree();
+</script>
+</body>
+</html>
